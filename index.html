@@ -1589,18 +1589,22 @@
       // 检查自动登录
       checkAutoLogin() {
         const saved = localStorage.getItem('mp_token');
-        if (saved) {
-          const { token, user, expiry } = JSON.parse(saved);
-          if (Date.now() < expiry) {
-            this.authToken = token;
-            this.currentUser = user;
+        if (!saved) return;
+        const { token, user, expiry } = JSON.parse(saved);
+        if (Date.now() >= expiry) { localStorage.removeItem('mp_token'); return; }
+        this.authToken = token;
+        fetch(`${this.apiBase}/user/data`, { headers: { 'Authorization': `Bearer ${token}` } })
+          .then(async r => { if (!r.ok) throw new Error('token_invalid'); return r.json(); })
+          .then(({ user: serverUser, pockets, recentActivity }) => {
+            this.currentUser = serverUser || user;
+            if (serverUser) {
+              localStorage.setItem(`user_${serverUser.id}_data`, JSON.stringify({ pockets: pockets || [], recentActivity: recentActivity || [] }));
+            }
             this.showMainContent();
             this.updateDashboard();
             this.showPage('dashboard');
-          } else {
-            localStorage.removeItem('mp_token');
-          }
-        }
+          })
+          .catch(() => { localStorage.removeItem('mp_token'); this.showAuthPage(); })
       },
       
       // 检查管理员自动登录
@@ -1677,8 +1681,7 @@
       // 退出登录
       logout() {
         this.currentUser = null;
-        localStorage.removeItem('monkeyPocketCurrentUser');
-        sessionStorage.removeItem('monkeyPocketCurrentUser');
+        localStorage.removeItem('mp_token');
         this.showAuthPage();
       },
       
