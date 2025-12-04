@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monkey Pocket - 魔法百宝袋</title>
+  <title>Monkey Pocket - 魔法百宝袋管理系统</title>
   <!-- 引入外部资源 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -23,7 +23,8 @@
               lightgray: '#666666',
               green: '#10B981',
               red: '#EF4444',
-              purple: '#8B5CF6'
+              purple: '#8B5CF6',
+              orange: '#F97316'
             },
           },
           fontFamily: {
@@ -53,6 +54,9 @@
       .glow-purple {
         box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
       }
+      .glow-orange {
+        box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+      }
       .monkey-bg {
         background: radial-gradient(circle at center, #1A1A1A 0%, #0A0A0A 100%);
       }
@@ -74,6 +78,11 @@
       .page-transition.active {
         opacity: 1;
         transform: translateY(0);
+      }
+      .gradient-text {
+        background: linear-gradient(45deg, #FFD700, #165DFF);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
       }
     }
   </style>
@@ -98,7 +107,7 @@
     <div class="relative">
       <button id="userMenuBtn" class="flex items-center bg-monkey-gray/80 backdrop-blur-md rounded-full p-2 border border-monkey-gray/50 hover:border-monkey-blue transition-all">
         <div class="w-8 h-8 rounded-full bg-monkey-yellow flex items-center justify-center mr-2">
-          <span class="text-monkey-darker font-bold text-sm">U</span>
+          <span class="text-monkey-darker font-bold text-sm" id="userInitial">U</span>
         </div>
         <span id="usernameDisplay" class="text-sm font-medium mr-2">用户</span>
         <i class="fa fa-chevron-down text-xs"></i>
@@ -118,6 +127,34 @@
           <a href="#retrieve" class="user-menu-item block px-3 py-2 text-sm rounded hover:bg-monkey-gray/70 transition-colors" data-i18n="userMenuRetrieve">远程取物</a>
           <div class="border-t border-monkey-gray/50 my-2"></div>
           <button id="logoutBtn" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-monkey-red/20 hover:text-monkey-red transition-colors" data-i18n="userMenuLogout">退出登录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 管理员菜单 -->
+  <div id="adminMenu" class="fixed top-4 right-4 z-50 hidden">
+    <div class="relative">
+      <button id="adminMenuBtn" class="flex items-center bg-monkey-orange/80 backdrop-blur-md rounded-full p-2 border border-monkey-orange/50 hover:border-monkey-orange transition-all">
+        <div class="w-8 h-8 rounded-full bg-monkey-orange flex items-center justify-center mr-2">
+          <span class="text-monkey-darker font-bold text-sm">A</span>
+        </div>
+        <span id="adminNameDisplay" class="text-sm font-medium mr-2">管理员</span>
+        <i class="fa fa-chevron-down text-xs"></i>
+      </button>
+      
+      <div id="adminDropdown" class="absolute right-0 top-full mt-2 w-48 bg-monkey-gray/95 backdrop-blur-lg rounded-lg border border-monkey-gray/50 shadow-lg hidden">
+        <div class="p-4 border-b border-monkey-gray/50">
+          <p class="text-sm font-medium">MonkeyKingdomCEO</p>
+          <p class="text-xs text-gray-400">管理员账户</p>
+        </div>
+        <div class="p-2">
+          <a href="#adminDashboard" class="admin-menu-item block px-3 py-2 text-sm rounded hover:bg-monkey-gray/70 transition-colors">管理后台</a>
+          <a href="#adminCreateCodes" class="admin-menu-item block px-3 py-2 text-sm rounded hover:bg-monkey-gray/70 transition-colors">生成激活码</a>
+          <a href="#adminViewUsers" class="admin-menu-item block px-3 py-2 text-sm rounded hover:bg-monkey-gray/70 transition-colors">查看用户</a>
+          <a href="#adminViewPockets" class="admin-menu-item block px-3 py-2 text-sm rounded hover:bg-monkey-gray/70 transition-colors">查看百宝袋</a>
+          <div class="border-t border-monkey-gray/50 my-2"></div>
+          <button id="adminLogoutBtn" class="w-full text-left px-3 py-2 text-sm rounded hover:bg-monkey-red/20 hover:text-monkey-red transition-colors">退出管理后台</button>
         </div>
       </div>
     </div>
@@ -143,6 +180,7 @@
           <a href="#items" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300 page-link" data-i18n="navItems">我的物品</a>
           <a href="#storage" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300 page-link" data-i18n="navStorage">购买存储格</a>
           <a href="#retrieve" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300 page-link" data-i18n="navRetrieve">远程取物</a>
+          <a href="#adminLogin" id="adminNavLink" class="text-gray-300 hover:text-monkey-orange transition-colors duration-300 page-link hidden">管理员入口</a>
         </nav>
         
         <!-- 移动端菜单按钮 -->
@@ -161,8 +199,12 @@
         <a href="#items" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300 page-link" data-i18n="navItems">我的物品</a>
         <a href="#storage" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300 page-link" data-i18n="navStorage">购买存储格</a>
         <a href="#retrieve" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300 page-link" data-i18n="navRetrieve">远程取物</a>
+        <a href="#adminLogin" id="mobileAdminNavLink" class="block py-2 text-gray-300 hover:text-monkey-orange transition-colors duration-300 page-link hidden">管理员入口</a>
         <div id="mobileUserMenu" class="pt-2 border-t border-monkey-gray/50 hidden">
           <button id="mobileLogoutBtn" class="w-full text-left py-2 text-gray-300 hover:text-monkey-red transition-colors" data-i18n="userMenuLogout">退出登录</button>
+        </div>
+        <div id="mobileAdminMenu" class="pt-2 border-t border-monkey-gray/50 hidden">
+          <button id="mobileAdminLogoutBtn" class="w-full text-left py-2 text-gray-300 hover:text-monkey-red transition-colors">退出管理后台</button>
         </div>
       </div>
     </div>
@@ -202,6 +244,12 @@
               <span data-i18n="authLoginButton">登录</span>
             </button>
           </form>
+          
+          <div class="text-center mt-6">
+            <button id="showAdminLogin" class="text-sm text-monkey-orange hover:text-monkey-orange/80 transition-colors">
+              <i class="fa fa-lock mr-1"></i> <span data-i18n="adminLoginLink">管理员登录</span>
+            </button>
+          </div>
           
           <div id="loginError" class="hidden bg-monkey-red/20 border border-monkey-red/50 rounded-lg p-4 mt-6">
             <div class="flex items-start">
@@ -266,6 +314,43 @@
               <div>
                 <h4 class="font-medium text-monkey-green" data-i18n="authRegisterSuccessTitle">注册成功!</h4>
                 <p class="text-sm text-gray-300 mt-1" data-i18n="authRegisterSuccessDesc">您的账户已创建，请登录以继续。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 管理员登录表单 -->
+        <div id="adminLoginForm" class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-8 border border-monkey-gray/50 hidden">
+          <h2 class="text-2xl font-bold mb-6 text-center text-monkey-orange">管理员登录</h2>
+          
+          <form id="adminLoginFormElement" class="space-y-4">
+            <div>
+              <label for="adminUsername" class="block text-sm font-medium text-gray-300 mb-1">管理员账号</label>
+              <input type="text" id="adminUsername" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-orange transition-colors" placeholder="MonkeyKingdomCEO" required>
+            </div>
+            
+            <div>
+              <label for="adminPassword" class="block text-sm font-medium text-gray-300 mb-1">管理员密码</label>
+              <input type="password" id="adminPassword" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-orange transition-colors" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="w-full bg-monkey-orange hover:bg-monkey-orange/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow-orange">
+              管理员登录
+            </button>
+          </form>
+          
+          <div class="text-center mt-6">
+            <button id="backToUserLogin" class="text-sm text-monkey-blue hover:text-monkey-blue/80 transition-colors">
+              <i class="fa fa-arrow-left mr-1"></i> <span data-i18n="backToUserLogin">返回用户登录</span>
+            </button>
+          </div>
+          
+          <div id="adminLoginError" class="hidden bg-monkey-red/20 border border-monkey-red/50 rounded-lg p-4 mt-6">
+            <div class="flex items-start">
+              <i class="fa fa-times-circle text-monkey-red text-xl mt-1 mr-3"></i>
+              <div>
+                <h4 class="font-medium text-monkey-red">管理员登录失败</h4>
+                <p class="text-sm text-gray-300 mt-1" id="adminLoginErrorMsg">账号或密码不正确</p>
               </div>
             </div>
           </div>
@@ -391,7 +476,7 @@
               <div class="w-10 h-10 rounded-full bg-monkey-blue flex items-center justify-center mr-4">
                 <span class="text-white font-bold">1</span>
               </div>
-              <h3 class="text-xl font-semibold" data-i18n="activateStep1">输入激活码</h3>
+              <h3 class="text-xl font-semibold" data-i18n="activateStep1">输入激活码和密码</h3>
             </div>
             
             <div class="space-y-4">
@@ -402,6 +487,12 @@
                   <label for="activationCode" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="activateCodeLabel">激活码</label>
                   <input type="text" id="activationCode" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="例如: MK-7890-ABCD-1234" maxlength="19">
                   <p class="text-xs text-gray-500 mt-1" data-i18n="activateCodeHint">激活码格式: MK-XXXX-XXXX-XXXX (X为字母或数字)</p>
+                </div>
+                
+                <div class="mb-4">
+                  <label for="activationPassword" class="block text-sm font-medium text-gray-300 mb-1">激活密码</label>
+                  <input type="password" id="activationPassword" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="输入激活密码">
+                  <p class="text-xs text-gray-500 mt-1">请在Monkey Pocket包装盒内找到激活密码</p>
                 </div>
                 
                 <div class="mb-4">
@@ -878,6 +969,361 @@
     </section>
   </main>
 
+  <!-- 管理后台区域 -->
+  <main id="adminContent" class="hidden">
+    <!-- 管理员仪表板 -->
+    <section id="adminDashboard" class="pt-32 pb-20 page-section page-transition">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-tight mb-6 gradient-text">
+          Monkey Pocket <span class="text-monkey-orange">管理后台</span>
+        </h1>
+        <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-3xl">
+          欢迎使用Monkey Pocket管理后台。在这里您可以管理激活码、查看用户信息和监控系统状态。
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <!-- 统计卡片1 -->
+          <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 rounded-full bg-monkey-orange/20 flex items-center justify-center mr-4">
+                <i class="fa fa-key text-monkey-orange text-2xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold" id="adminTotalCodes">0</h3>
+                <p class="text-gray-400 text-sm">激活码总数</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 统计卡片2 -->
+          <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 rounded-full bg-monkey-blue/20 flex items-center justify-center mr-4">
+                <i class="fa fa-users text-monkey-blue text-2xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold" id="adminTotalUsers">0</h3>
+                <p class="text-gray-400 text-sm">注册用户总数</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 统计卡片3 -->
+          <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 rounded-full bg-monkey-green/20 flex items-center justify-center mr-4">
+                <i class="fa fa-briefcase text-monkey-green text-2xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold" id="adminActivePockets">0</h3>
+                <p class="text-gray-400 text-sm">已激活百宝袋</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 统计卡片4 -->
+          <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 rounded-full bg-monkey-purple/20 flex items-center justify-center mr-4">
+                <i class="fa fa-money text-monkey-purple text-2xl"></i>
+              </div>
+              <div>
+                <h3 class="text-xl font-bold" id="adminTotalRevenue">$0</h3>
+                <p class="text-gray-400 text-sm">总营收</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 快速操作 -->
+        <div class="mb-12">
+          <h2 class="text-2xl font-bold mb-6">快速操作</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="#adminCreateCodes" class="bg-monkey-orange/10 hover:bg-monkey-orange/20 border border-monkey-orange/30 rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-300 transform hover:scale-105">
+              <div class="w-14 h-14 rounded-full bg-monkey-orange/20 flex items-center justify-center mb-4">
+                <i class="fa fa-plus text-monkey-orange text-2xl"></i>
+              </div>
+              <h3 class="font-medium text-center">生成激活码</h3>
+            </a>
+            
+            <a href="#adminViewUsers" class="bg-monkey-blue/10 hover:bg-monkey-blue/20 border border-monkey-blue/30 rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-300 transform hover:scale-105">
+              <div class="w-14 h-14 rounded-full bg-monkey-blue/20 flex items-center justify-center mb-4">
+                <i class="fa fa-user text-monkey-blue text-2xl"></i>
+              </div>
+              <h3 class="font-medium text-center">查看用户</h3>
+            </a>
+            
+            <a href="#adminViewPockets" class="bg-monkey-green/10 hover:bg-monkey-green/20 border border-monkey-green/30 rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-300 transform hover:scale-105">
+              <div class="w-14 h-14 rounded-full bg-monkey-green/20 flex items-center justify-center mb-4">
+                <i class="fa fa-briefcase text-monkey-green text-2xl"></i>
+              </div>
+              <h3 class="font-medium text-center">查看百宝袋</h3>
+            </a>
+            
+            <a href="#adminViewCodes" class="bg-monkey-purple/10 hover:bg-monkey-purple/20 border border-monkey-purple/30 rounded-xl p-6 flex flex-col items-center justify-center transition-all duration-300 transform hover:scale-105">
+              <div class="w-14 h-14 rounded-full bg-monkey-purple/20 flex items-center justify-center mb-4">
+                <i class="fa fa-list text-monkey-purple text-2xl"></i>
+              </div>
+              <h3 class="font-medium text-center">激活码列表</h3>
+            </a>
+          </div>
+        </div>
+        
+        <!-- 最近激活记录 -->
+        <div>
+          <h2 class="text-2xl font-bold mb-6">最近激活记录</h2>
+          <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+            <div id="adminRecentActivity" class="space-y-4">
+              <div class="text-center py-8 text-gray-500">
+                <i class="fa fa-history text-3xl mb-3"></i>
+                <p>暂无激活记录</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 生成激活码页面 -->
+    <section id="adminCreateCodes" class="py-20 bg-monkey-dark page-section page-transition">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4">生成<span class="text-monkey-orange">激活码</span></h2>
+          <p class="text-gray-400 max-w-2xl mx-auto">为新的Monkey Pocket设备生成激活码和密码</p>
+        </div>
+        
+        <div class="max-w-2xl mx-auto">
+          <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+            <h3 class="text-xl font-semibold mb-6">生成设置</h3>
+            
+            <div class="space-y-6">
+              <div>
+                <label for="codeCount" class="block text-sm font-medium text-gray-300 mb-2">生成数量</label>
+                <input type="number" id="codeCount" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-orange transition-colors" value="1" min="1" max="100">
+                <p class="text-xs text-gray-500 mt-1">一次最多可生成100个激活码</p>
+              </div>
+              
+              <div>
+                <label for="passwordLength" class="block text-sm font-medium text-gray-300 mb-2">密码长度</label>
+                <input type="number" id="passwordLength" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-orange transition-colors" value="8" min="6" max="20">
+                <p class="text-xs text-gray-500 mt-1">密码长度建议8-12位</p>
+              </div>
+              
+              <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">密码复杂度</label>
+                <div class="flex space-x-4">
+                  <label class="flex items-center">
+                    <input type="radio" name="complexity" value="simple" class="mr-2 text-monkey-orange focus:ring-monkey-orange" checked>
+                    <span class="text-sm">简单 (仅数字)</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" name="complexity" value="medium" class="mr-2 text-monkey-orange focus:ring-monkey-orange">
+                    <span class="text-sm">中等 (字母+数字)</span>
+                  </label>
+                  <label class="flex items-center">
+                    <input type="radio" name="complexity" value="strong" class="mr-2 text-monkey-orange focus:ring-monkey-orange">
+                    <span class="text-sm">复杂 (大小写字母+数字+符号)</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label for="expiryDate" class="block text-sm font-medium text-gray-300 mb-2">有效期限</label>
+                <input type="date" id="expiryDate" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-orange transition-colors">
+                <p class="text-xs text-gray-500 mt-1">留空表示永久有效</p>
+              </div>
+              
+              <button id="generateCodesBtn" class="w-full bg-monkey-orange hover:bg-monkey-orange/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow-orange">
+                <i class="fa fa-key mr-2"></i> 生成激活码
+              </button>
+            </div>
+          </div>
+          
+          <div id="generatedCodesContainer" class="mt-8 hidden">
+            <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+              <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold">生成的激活码</h3>
+                <button id="copyAllCodes" class="bg-monkey-blue hover:bg-monkey-blue/90 text-white text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+                  <i class="fa fa-copy mr-1"></i> 复制全部
+                </button>
+              </div>
+              
+              <div class="bg-monkey-gray/50 rounded-lg p-4 max-h-96 overflow-y-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-monkey-gray">
+                      <th class="text-left py-2 px-3">序号</th>
+                      <th class="text-left py-2 px-3">激活码</th>
+                      <th class="text-left py-2 px-3">密码</th>
+                      <th class="text-left py-2 px-3">状态</th>
+                    </tr>
+                  </thead>
+                  <tbody id="generatedCodesList">
+                    <!-- 生成的激活码将通过JavaScript动态添加 -->
+                  </tbody>
+                </table>
+              </div>
+              
+              <div class="mt-6 p-4 bg-monkey-green/10 border border-monkey-green/30 rounded-lg">
+                <div class="flex items-start">
+                  <i class="fa fa-info-circle text-monkey-green text-xl mt-1 mr-3"></i>
+                  <div>
+                    <h4 class="font-medium text-monkey-green">重要提示</h4>
+                    <p class="text-sm text-gray-300 mt-1">请将这些激活码和密码安全地分发给客户。每个激活码只能使用一次。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 查看用户页面 -->
+    <section id="adminViewUsers" class="py-20 page-section page-transition">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4">查看<span class="text-monkey-blue">用户</span></h2>
+          <p class="text-gray-400 max-w-2xl mx-auto">管理所有注册Monkey Pocket的用户</p>
+        </div>
+        
+        <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold">用户列表</h3>
+            <div class="flex items-center space-x-4">
+              <div class="relative">
+                <input type="text" id="searchUsers" class="bg-monkey-gray/50 border border-monkey-gray rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="搜索用户...">
+                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-monkey-gray">
+                  <th class="text-left py-3 px-4">用户名</th>
+                  <th class="text-left py-3 px-4">邮箱</th>
+                  <th class="text-left py-3 px-4">注册日期</th>
+                  <th class="text-left py-3 px-4">最后登录</th>
+                  <th class="text-left py-3 px-4">百宝袋数量</th>
+                  <th class="text-left py-3 px-4">操作</th>
+                </tr>
+              </thead>
+              <tbody id="usersList">
+                <!-- 用户数据将通过JavaScript动态添加 -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="noUsersMessage" class="text-center py-12 text-gray-500">
+            <i class="fa fa-users text-4xl mb-3"></i>
+            <p>暂无用户数据</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 查看百宝袋页面 -->
+    <section id="adminViewPockets" class="py-20 bg-monkey-dark page-section page-transition">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4">查看<span class="text-monkey-green">百宝袋</span></h2>
+          <p class="text-gray-400 max-w-2xl mx-auto">查看所有已激活的Monkey Pocket设备</p>
+        </div>
+        
+        <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold">百宝袋列表</h3>
+            <div class="flex items-center space-x-4">
+              <div class="relative">
+                <input type="text" id="searchPockets" class="bg-monkey-gray/50 border border-monkey-gray rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-monkey-green transition-colors" placeholder="搜索百宝袋...">
+                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-monkey-gray">
+                  <th class="text-left py-3 px-4">激活码</th>
+                  <th class="text-left py-3 px-4">名称</th>
+                  <th class="text-left py-3 px-4">所属用户</th>
+                  <th class="text-left py-3 px-4">IP地址</th>
+                  <th class="text-left py-3 px-4">存储格</th>
+                  <th class="text-left py-3 px-4">物品数量</th>
+                  <th class="text-left py-3 px-4">激活日期</th>
+                  <th class="text-left py-3 px-4">操作</th>
+                </tr>
+              </thead>
+              <tbody id="pocketsListAdmin">
+                <!-- 百宝袋数据将通过JavaScript动态添加 -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="noPocketsAdminMessage" class="text-center py-12 text-gray-500">
+            <i class="fa fa-briefcase text-4xl mb-3"></i>
+            <p>暂无百宝袋数据</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 查看激活码页面 -->
+    <section id="adminViewCodes" class="py-20 page-section page-transition">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4">查看<span class="text-monkey-purple">激活码</span></h2>
+          <p class="text-gray-400 max-w-2xl mx-auto">查看所有已生成和已使用的激活码</p>
+        </div>
+        
+        <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
+          <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold">激活码列表</h3>
+            <div class="flex items-center space-x-4">
+              <select id="filterCodeStatus" class="bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-purple transition-colors">
+                <option value="all">全部状态</option>
+                <option value="unused">未使用</option>
+                <option value="used">已使用</option>
+                <option value="expired">已过期</option>
+              </select>
+              <div class="relative">
+                <input type="text" id="searchCodes" class="bg-monkey-gray/50 border border-monkey-gray rounded-lg pl-10 pr-4 py-2 text-white focus:outline-none focus:border-monkey-purple transition-colors" placeholder="搜索激活码...">
+                <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+              </div>
+            </div>
+          </div>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-monkey-gray">
+                  <th class="text-left py-3 px-4">激活码</th>
+                  <th class="text-left py-3 px-4">密码</th>
+                  <th class="text-left py-3 px-4">状态</th>
+                  <th class="text-left py-3 px-4">使用者</th>
+                  <th class="text-left py-3 px-4">生成日期</th>
+                  <th class="text-left py-3 px-4">有效期限</th>
+                  <th class="text-left py-3 px-4">操作</th>
+                </tr>
+              </thead>
+              <tbody id="codesList">
+                <!-- 激活码数据将通过JavaScript动态添加 -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div id="noCodesMessage" class="text-center py-12 text-gray-500">
+            <i class="fa fa-key text-4xl mb-3"></i>
+            <p>暂无激活码数据</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
   <!-- 页脚 -->
   <footer class="bg-monkey-darker border-t border-monkey-gray/30 py-12">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -963,9 +1409,13 @@
     const AppState = {
       // 当前用户信息
       currentUser: null,
+      currentAdmin: null,
       
       // 所有用户数据 (模拟数据库)
       users: {},
+      
+      // 所有激活码数据
+      activationCodes: {},
       
       // 当前语言
       currentLang: 'zh',
@@ -979,13 +1429,24 @@
       // 活动页面
       activePage: 'dashboard',
       
+      // 管理员设置
+      adminUsername: 'MonkeyKingdomCEO',
+      adminPassword: 'zzx070502ZZX070502',
+      
       // 初始化应用程序
       init() {
         this.loadUsersFromStorage();
+        this.loadActivationCodesFromStorage();
         this.checkAutoLogin();
+        this.checkAdminAutoLogin();
         this.setupEventListeners();
         this.initLanguage();
         this.showAuthPage();
+        
+        // 如果本地存储中没有激活码，创建一些演示激活码
+        if (Object.keys(this.activationCodes).length === 0) {
+          this.createDemoActivationCodes();
+        }
       },
       
       // 从本地存储加载用户数据
@@ -1001,6 +1462,19 @@
         }
       },
       
+      // 从本地存储加载激活码数据
+      loadActivationCodesFromStorage() {
+        const storedCodes = localStorage.getItem('monkeyPocketActivationCodes');
+        if (storedCodes) {
+          this.activationCodes = JSON.parse(storedCodes);
+        }
+      },
+      
+      // 保存激活码数据到本地存储
+      saveActivationCodesToStorage() {
+        localStorage.setItem('monkeyPocketActivationCodes', JSON.stringify(this.activationCodes));
+      },
+      
       // 创建演示数据
       createDemoData() {
         // 创建演示用户
@@ -1014,39 +1488,87 @@
           rememberMe: false
         };
         
-        // 创建演示百宝袋
-        const demoPocket = {
-          id: 'pocket_001',
-          userId: 'user_001',
-          activationCode: 'MK-7890-ABCD-1234',
-          name: '我的魔法袋',
-          ipAddress: '192.168.1.100',
-          fullName: '陈小明',
-          hkid: 'A123456(7)',
-          storageSlots: 15,
-          usedSlots: 3,
-          purchasedSlots: 0,
-          items: [
-            { id: 'item_001', name: '钱包', category: 'accessories', description: '黑色皮质钱包，内含卡片' },
-            { id: 'item_002', name: '钥匙', category: 'personal', description: '房屋和汽车钥匙' },
-            { id: 'item_003', name: '手机充电器', category: 'electronics', description: 'USB-C快速充电器' }
-          ],
-          purchaseHistory: [],
-          retrieveHistory: [],
-          createdAt: new Date().toISOString()
-        };
-        
         // 保存用户
         this.users[demoUser.email] = demoUser;
         
         // 保存用户数据到本地存储
         const userData = {
-          pockets: [demoPocket],
+          pockets: [],
           recentActivity: []
         };
         
         localStorage.setItem(`user_${demoUser.id}_data`, JSON.stringify(userData));
         localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
+      },
+      
+      // 创建演示激活码
+      createDemoActivationCodes() {
+        // 创建一些演示激活码
+        const demoCodes = {
+          'MK-7890-ABCD-1234': {
+            password: 'demo1234',
+            used: false,
+            userId: null,
+            pocketId: null,
+            generatedAt: new Date().toISOString(),
+            expiresAt: null
+          },
+          'MK-5678-EFGH-9012': {
+            password: 'test5678',
+            used: false,
+            userId: null,
+            pocketId: null,
+            generatedAt: new Date().toISOString(),
+            expiresAt: null
+          },
+          'MK-3456-IJKL-7890': {
+            password: 'code3456',
+            used: true,
+            userId: 'user_001',
+            pocketId: 'pocket_001',
+            generatedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天前
+            expiresAt: null
+          }
+        };
+        
+        this.activationCodes = demoCodes;
+        this.saveActivationCodesToStorage();
+      },
+      
+      // 生成新的激活码
+      generateActivationCode() {
+        // 格式: MK-XXXX-XXXX-XXXX
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let code = 'MK-';
+        
+        for (let i = 0; i < 12; i++) {
+          if (i > 0 && i % 4 === 0) {
+            code += '-';
+          }
+          code += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        return code;
+      },
+      
+      // 生成密码
+      generatePassword(length = 8, complexity = 'medium') {
+        let chars = '';
+        let password = '';
+        
+        if (complexity === 'simple') {
+          chars = '0123456789';
+        } else if (complexity === 'medium') {
+          chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        } else if (complexity === 'strong') {
+          chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+        }
+        
+        for (let i = 0; i < length; i++) {
+          password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        
+        return password;
       },
       
       // 检查自动登录
@@ -1067,6 +1589,25 @@
           } else {
             // 清除过期的登录信息
             localStorage.removeItem('monkeyPocketCurrentUser');
+          }
+        }
+      },
+      
+      // 检查管理员自动登录
+      checkAdminAutoLogin() {
+        const savedAdminLogin = sessionStorage.getItem('monkeyPocketAdmin');
+        if (savedAdminLogin) {
+          const { adminUsername, expiry } = JSON.parse(savedAdminLogin);
+          
+          // 检查是否过期 (会话期间)
+          if (new Date().getTime() < expiry) {
+            this.currentAdmin = { username: adminUsername };
+            this.showAdminContent();
+            this.updateAdminDashboard();
+            this.showAdminPage('adminDashboard');
+          } else {
+            // 清除过期的登录信息
+            sessionStorage.removeItem('monkeyPocketAdmin');
           }
         }
       },
@@ -1121,6 +1662,22 @@
         this.showPage('dashboard');
       },
       
+      // 保存当前管理员
+      saveCurrentAdmin(admin) {
+        this.currentAdmin = admin;
+        
+        // 设置会话过期时间 (12小时)
+        const expiry = new Date().getTime() + (12 * 60 * 60 * 1000);
+        sessionStorage.setItem('monkeyPocketAdmin', JSON.stringify({
+          adminUsername: admin.username,
+          expiry
+        }));
+        
+        this.showAdminContent();
+        this.updateAdminDashboard();
+        this.showAdminPage('adminDashboard');
+      },
+      
       // 退出登录
       logout() {
         this.currentUser = null;
@@ -1129,12 +1686,24 @@
         this.showAuthPage();
       },
       
+      // 退出管理员
+      adminLogout() {
+        this.currentAdmin = null;
+        sessionStorage.removeItem('monkeyPocketAdmin');
+        this.showAuthPage();
+      },
+      
       // 显示登录页面
       showAuthPage() {
         document.getElementById('authPage').classList.remove('hidden');
         document.getElementById('mainContent').classList.add('hidden');
+        document.getElementById('adminContent').classList.add('hidden');
         document.getElementById('userMenu').classList.add('hidden');
+        document.getElementById('adminMenu').classList.add('hidden');
         document.getElementById('mobileUserMenu').classList.add('hidden');
+        document.getElementById('mobileAdminMenu').classList.add('hidden');
+        document.getElementById('adminNavLink').classList.remove('hidden');
+        document.getElementById('mobileAdminNavLink').classList.remove('hidden');
         this.showLoginForm();
       },
       
@@ -1142,22 +1711,43 @@
       showMainContent() {
         document.getElementById('authPage').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
+        document.getElementById('adminContent').classList.add('hidden');
         document.getElementById('userMenu').classList.remove('hidden');
+        document.getElementById('adminMenu').classList.add('hidden');
         document.getElementById('mobileUserMenu').classList.remove('hidden');
+        document.getElementById('mobileAdminMenu').classList.add('hidden');
+        document.getElementById('adminNavLink').classList.add('hidden');
+        document.getElementById('mobileAdminNavLink').classList.add('hidden');
         
         // 更新用户信息显示
         if (this.currentUser) {
-          document.getElementById('usernameDisplay').textContent = this.currentUser.username;
-          document.getElementById('dropdownUsername').textContent = this.currentUser.username;
+          const username = this.currentUser.username;
+          document.getElementById('usernameDisplay').textContent = username;
+          document.getElementById('dropdownUsername').textContent = username;
           document.getElementById('dropdownEmail').textContent = this.currentUser.email;
-          document.getElementById('dashboardUsername').textContent = this.currentUser.username;
+          document.getElementById('dashboardUsername').textContent = username;
+          document.getElementById('userInitial').textContent = username.charAt(0).toUpperCase();
         }
+      },
+      
+      // 显示管理员内容
+      showAdminContent() {
+        document.getElementById('authPage').classList.add('hidden');
+        document.getElementById('mainContent').classList.add('hidden');
+        document.getElementById('adminContent').classList.remove('hidden');
+        document.getElementById('userMenu').classList.add('hidden');
+        document.getElementById('adminMenu').classList.remove('hidden');
+        document.getElementById('mobileUserMenu').classList.add('hidden');
+        document.getElementById('mobileAdminMenu').classList.remove('hidden');
+        document.getElementById('adminNavLink').classList.add('hidden');
+        document.getElementById('mobileAdminNavLink').classList.add('hidden');
       },
       
       // 显示登录表单
       showLoginForm() {
         document.getElementById('loginForm').classList.remove('hidden');
         document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('adminLoginForm').classList.add('hidden');
         document.getElementById('showLogin').classList.add('bg-monkey-blue', 'text-white');
         document.getElementById('showLogin').classList.remove('text-gray-300');
         document.getElementById('showRegister').classList.remove('bg-monkey-blue', 'text-white');
@@ -1168,10 +1758,22 @@
       showRegisterForm() {
         document.getElementById('registerForm').classList.remove('hidden');
         document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('adminLoginForm').classList.add('hidden');
         document.getElementById('showRegister').classList.add('bg-monkey-blue', 'text-white');
         document.getElementById('showRegister').classList.remove('text-gray-300');
         document.getElementById('showLogin').classList.remove('bg-monkey-blue', 'text-white');
         document.getElementById('showLogin').classList.add('text-gray-300');
+      },
+      
+      // 显示管理员登录表单
+      showAdminLoginForm() {
+        document.getElementById('adminLoginForm').classList.remove('hidden');
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('showLogin').classList.remove('bg-monkey-blue', 'text-white');
+        document.getElementById('showLogin').classList.add('text-gray-300');
+        document.getElementById('showRegister').classList.remove('bg-monkey-blue', 'text-white');
+        document.getElementById('showRegister').classList.add('text-gray-300');
       },
       
       // 显示页面
@@ -1212,6 +1814,42 @@
         }
       },
       
+      // 显示管理员页面
+      showAdminPage(pageId) {
+        // 隐藏所有页面
+        document.querySelectorAll('.page-section').forEach(section => {
+          section.classList.remove('active');
+          setTimeout(() => {
+            section.classList.add('hidden');
+          }, 50);
+        });
+        
+        // 显示目标页面
+        setTimeout(() => {
+          const targetPage = document.getElementById(pageId);
+          if (targetPage) {
+            targetPage.classList.remove('hidden');
+            setTimeout(() => {
+              targetPage.classList.add('active');
+            }, 50);
+          }
+        }, 100);
+        
+        // 更新活动页面
+        this.activePage = pageId;
+        
+        // 更新页面内容
+        if (pageId === 'adminDashboard') {
+          this.updateAdminDashboard();
+        } else if (pageId === 'adminViewUsers') {
+          this.renderAdminUsersList();
+        } else if (pageId === 'adminViewPockets') {
+          this.renderAdminPocketsList();
+        } else if (pageId === 'adminViewCodes') {
+          this.renderAdminCodesList();
+        }
+      },
+      
       // 更新仪表板
       updateDashboard() {
         if (!this.currentUser) return;
@@ -1231,6 +1869,43 @@
         
         // 更新最近活动
         this.renderRecentActivity(userData.recentActivity);
+      },
+      
+      // 更新管理员仪表板
+      updateAdminDashboard() {
+        // 计算统计数据
+        const totalCodes = Object.keys(this.activationCodes).length;
+        const totalUsers = Object.keys(this.users).length;
+        
+        // 计算已激活的百宝袋数量
+        let activePockets = 0;
+        let totalRevenue = 0;
+        
+        // 遍历所有用户数据
+        Object.values(this.users).forEach(user => {
+          const userData = this.getUserData(user.id);
+          if (userData) {
+            activePockets += userData.pockets.length;
+            
+            // 计算每个百宝袋的购买记录
+            userData.pockets.forEach(pocket => {
+              if (pocket.purchaseHistory) {
+                pocket.purchaseHistory.forEach(purchase => {
+                  totalRevenue += purchase.price;
+                });
+              }
+            });
+          }
+        });
+        
+        // 更新统计卡片
+        document.getElementById('adminTotalCodes').textContent = totalCodes;
+        document.getElementById('adminTotalUsers').textContent = totalUsers;
+        document.getElementById('adminActivePockets').textContent = activePockets;
+        document.getElementById('adminTotalRevenue').textContent = `$${totalRevenue}`;
+        
+        // 更新最近激活记录
+        this.renderAdminRecentActivity();
       },
       
       // 渲染最近活动
@@ -1281,6 +1956,64 @@
               <p class="text-sm">${activity.description}</p>
               <p class="text-xs text-gray-500 mt-1">${new Date(activity.timestamp).toLocaleString()}</p>
             </div>
+          `;
+          
+          activityList.appendChild(activityElement);
+        });
+      },
+      
+      // 渲染管理员最近激活记录
+      renderAdminRecentActivity() {
+        const activityList = document.getElementById('adminRecentActivity');
+        
+        // 获取所有激活记录
+        let recentActivations = [];
+        
+        // 遍历所有激活码，找出最近使用的
+        Object.entries(this.activationCodes).forEach(([code, data]) => {
+          if (data.used && data.userId) {
+            // 获取用户信息
+            const user = Object.values(this.users).find(u => u.id === data.userId);
+            if (user) {
+              recentActivations.push({
+                code,
+                username: user.username,
+                timestamp: data.generatedAt,
+                status: '已激活'
+              });
+            }
+          }
+        });
+        
+        // 按时间排序，获取最近5条
+        recentActivations.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        recentActivations = recentActivations.slice(0, 5);
+        
+        if (recentActivations.length === 0) {
+          activityList.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+              <i class="fa fa-history text-3xl mb-3"></i>
+              <p>暂无激活记录</p>
+            </div>
+          `;
+          return;
+        }
+        
+        activityList.innerHTML = '';
+        
+        recentActivations.forEach(activation => {
+          const activityElement = document.createElement('div');
+          activityElement.className = 'flex items-start py-3 border-b border-monkey-gray/50 last:border-0';
+          
+          activityElement.innerHTML = `
+            <div class="w-8 h-8 rounded-full bg-monkey-orange/20 flex items-center justify-center mr-3">
+              <i class="fa fa-key text-monkey-orange"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-sm"><span class="font-medium">${activation.code}</span> 被用户 <span class="font-medium">${activation.username}</span> 激活</p>
+              <p class="text-xs text-gray-500 mt-1">${new Date(activation.timestamp).toLocaleString()}</p>
+            </div>
+            <span class="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">${activation.status}</span>
           `;
           
           activityList.appendChild(activityElement);
@@ -1412,6 +2145,10 @@
           : '确定要删除这个百宝袋吗？里面的所有物品都将丢失。';
         
         if (!confirm(confirmMsg)) return;
+        
+        // 查找要删除的百宝袋
+        const pocketToDelete = userData.pockets.find(p => p.id === pocketId);
+        if (!pocketToDelete) return;
         
         // 从列表中移除
         userData.pockets = userData.pockets.filter(p => p.id !== pocketId);
@@ -1571,7 +2308,8 @@
           if (selectedPocket) {
             allItems = selectedPocket.items.map(item => ({
               ...item,
-              pocketName: selectedPocket.name
+              pocketName: selectedPocket.name,
+              pocketId: selectedPocket.id
             }));
           }
         } else {
@@ -1580,7 +2318,8 @@
             pocket.items.forEach(item => {
               allItems.push({
                 ...item,
-                pocketName: pocket.name
+                pocketName: pocket.name,
+                pocketId: pocket.id
               });
             });
           });
@@ -1604,9 +2343,9 @@
           const categoryColors = {
             'electronics': 'monkey-blue',
             'clothing': 'monkey-yellow',
-            'accessories': 'purple-500',
-            'documents': 'red-500',
-            'personal': 'green-500',
+            'accessories': 'monkey-purple',
+            'documents': 'monkey-red',
+            'personal': 'monkey-green',
             'other': 'gray-500'
           };
           
@@ -1619,17 +2358,19 @@
             'other': this.currentLang === 'en' ? 'Other' : '其他'
           };
           
+          const colorClass = categoryColors[item.category] || 'gray-500';
+          
           const itemElement = document.createElement('div');
           itemElement.className = 'bg-monkey-gray/50 rounded-lg p-4 border border-monkey-gray hover:border-monkey-blue/50 transition-colors';
           itemElement.innerHTML = `
             <div class="flex justify-between items-start mb-2">
               <h4 class="font-medium">${item.name}</h4>
-              <span class="text-xs px-2 py-1 rounded-full bg-${categoryColors[item.category]}/20 text-${categoryColors[item.category]}">${categoryLabels[item.category]}</span>
+              <span class="text-xs px-2 py-1 rounded-full bg-${colorClass}/20 text-${colorClass}">${categoryLabels[item.category]}</span>
             </div>
             <p class="text-sm text-gray-400 mb-2">${item.description}</p>
             <div class="flex justify-between items-center">
               <span class="text-xs text-gray-500">${item.pocketName}</span>
-              <button class="text-gray-400 hover:text-red-400 text-sm transition-colors remove-item" data-id="${item.id}">
+              <button class="text-gray-400 hover:text-red-400 text-sm transition-colors remove-item" data-id="${item.id}" data-pocket="${item.pocketId}">
                 <i class="fa fa-trash-o mr-1"></i> ${this.currentLang === 'en' ? 'Remove' : '移除'}
               </button>
             </div>
@@ -1642,46 +2383,58 @@
         document.querySelectorAll('.remove-item').forEach(btn => {
           btn.addEventListener('click', () => {
             const itemId = btn.getAttribute('data-id');
-            this.removeItem(itemId);
+            const pocketId = btn.getAttribute('data-pocket');
+            this.removeItem(itemId, pocketId);
           });
         });
       },
       
       // 移除物品
-      removeItem(itemId) {
+      removeItem(itemId, pocketId) {
         if (!this.currentUser) return;
         
         const userData = this.getUserData(this.currentUser.id);
         if (!userData) return;
         
-        // 在所有百宝袋中查找并移除物品
-        userData.pockets.forEach(pocket => {
-          const itemIndex = pocket.items.findIndex(item => item.id === itemId);
-          if (itemIndex !== -1) {
-            pocket.items.splice(itemIndex, 1);
-            pocket.usedSlots--;
-          }
-        });
+        // 在指定的百宝袋中查找并移除物品
+        const pocketIndex = userData.pockets.findIndex(p => p.id === pocketId);
+        if (pocketIndex === -1) return;
         
-        this.saveUserData(this.currentUser.id, userData);
-        this.renderItemsList();
-        this.updateStorageStatus();
-        this.updateDashboard();
+        const pocket = userData.pockets[pocketIndex];
+        const itemIndex = pocket.items.findIndex(item => item.id === itemId);
         
-        // 添加活动记录
-        this.addActivity(this.currentUser.id, 'remove_item', 
-          this.currentLang === 'en' 
-            ? 'Removed an item' 
-            : '移除了一个物品'
-        );
-        
-        // 显示成功消息
-        this.showToast(
-          this.currentLang === 'en' 
-            ? 'Item removed successfully!' 
-            : '物品移除成功！',
-          'success'
-        );
+        if (itemIndex !== -1) {
+          // 保存物品名称用于消息显示
+          const itemName = pocket.items[itemIndex].name;
+          
+          // 移除物品
+          pocket.items.splice(itemIndex, 1);
+          pocket.usedSlots--;
+          
+          // 保存更新后的数据
+          userData.pockets[pocketIndex] = pocket;
+          this.saveUserData(this.currentUser.id, userData);
+          
+          // 更新UI
+          this.renderItemsList();
+          this.updateStorageStatus();
+          this.updateDashboard();
+          
+          // 添加活动记录
+          this.addActivity(this.currentUser.id, 'remove_item', 
+            this.currentLang === 'en' 
+              ? `Removed item: ${itemName}` 
+              : `移除了物品: ${itemName}`
+          );
+          
+          // 显示成功消息
+          this.showToast(
+            this.currentLang === 'en' 
+              ? 'Item removed successfully!' 
+              : '物品移除成功！',
+            'success'
+          );
+        }
       },
       
       // 更新远程取物百宝袋选择器
@@ -1762,9 +2515,9 @@
           const categoryColors = {
             'electronics': 'monkey-blue',
             'clothing': 'monkey-yellow',
-            'accessories': 'purple-500',
-            'documents': 'red-500',
-            'personal': 'green-500',
+            'accessories': 'monkey-purple',
+            'documents': 'monkey-red',
+            'personal': 'monkey-green',
             'other': 'gray-500'
           };
           
@@ -1777,6 +2530,8 @@
             'other': this.currentLang === 'en' ? 'Other' : '其他'
           };
           
+          const colorClass = categoryColors[item.category] || 'gray-500';
+          
           const itemElement = document.createElement('div');
           itemElement.className = 'bg-monkey-gray/50 rounded-lg p-4 border border-monkey-gray hover:border-monkey-blue/50 transition-colors';
           itemElement.dataset.id = item.id;
@@ -1786,7 +2541,7 @@
               <div class="flex-1">
                 <div class="flex justify-between items-start">
                   <h4 class="font-medium">${item.name}</h4>
-                  <span class="text-xs px-2 py-1 rounded-full bg-${categoryColors[item.category]}/20 text-${categoryColors[item.category]}">${categoryLabels[item.category]}</span>
+                  <span class="text-xs px-2 py-1 rounded-full bg-${colorClass}/20 text-${colorClass}">${categoryLabels[item.category]}</span>
                 </div>
                 <p class="text-sm text-gray-400 mt-1">${item.description}</p>
               </div>
@@ -1935,13 +2690,17 @@
             this.updateDashboard();
             
             // 添加取物记录
-            this.selectedItemsForRetrieval.forEach(item => {
-              pocket.retrieveHistory.push({
-                itemId: item.id,
-                itemName: item.name,
-                timestamp: new Date().toISOString()
-              });
-            });
+            const retrieveHistoryItem = {
+              items: this.selectedItemsForRetrieval.map(item => item.name),
+              timestamp: new Date().toISOString(),
+              slotsConsumed: this.selectedItemsForRetrieval.length
+            };
+            
+            if (!pocket.retrieveHistory) {
+              pocket.retrieveHistory = [];
+            }
+            
+            pocket.retrieveHistory.push(retrieveHistoryItem);
             
             // 添加活动记录
             this.addActivity(this.currentUser.id, 'retrieve', 
@@ -2033,6 +2792,8 @@
             authRegisterErrorTitle: "Registration Failed",
             authRegisterSuccessTitle: "Registration Successful!",
             authRegisterSuccessDesc: "Your account has been created. Please login to continue.",
+            adminLoginLink: "Admin Login",
+            backToUserLogin: "Back to User Login",
             
             // 仪表板
             dashboardTitle: "Welcome back, <span class='text-monkey-yellow text-shadow'>User</span>!",
@@ -2232,6 +2993,8 @@
             authRegisterErrorTitle: "注册失败",
             authRegisterSuccessTitle: "注册成功!",
             authRegisterSuccessDesc: "您的账户已创建，请登录以继续。",
+            adminLoginLink: "管理员登录",
+            backToUserLogin: "返回用户登录",
             
             // 仪表板
             dashboardTitle: "欢迎回来, <span class='text-monkey-yellow text-shadow'>用户</span>!",
@@ -2250,7 +3013,7 @@
             // 激活区域
             activateTitle: "激活你的<span class='text-monkey-yellow'>Monkey Pocket</span>",
             activateDescription: "请按照以下两个步骤完成设备激活",
-            activateStep1: "输入激活码",
+            activateStep1: "输入激活码和密码",
             activateStep1Desc: "请在您的Monkey Pocket包装盒内找到激活码卡片，输入下方以激活您的设备。",
             activateCodeLabel: "激活码",
             activateCodeHint: "激活码格式: MK-XXXX-XXXX-XXXX (X为字母或数字)",
@@ -2491,7 +3254,15 @@
             e.preventDefault();
             
             const targetId = anchor.getAttribute('href').substring(1);
-            this.showPage(targetId);
+            
+            if (this.currentAdmin) {
+              this.showAdminPage(targetId);
+            } else if (this.currentUser) {
+              this.showPage(targetId);
+            } else {
+              // 如果用户未登录，显示登录页面
+              this.showAuthPage();
+            }
             
             // 关闭移动端菜单
             if (!mobileMenu.classList.contains('hidden')) {
@@ -2510,27 +3281,45 @@
         // Logo点击返回仪表板
         document.getElementById('logoHome').addEventListener('click', (e) => {
           e.preventDefault();
-          if (this.currentUser) {
+          if (this.currentAdmin) {
+            this.showAdminPage('adminDashboard');
+          } else if (this.currentUser) {
             this.showPage('dashboard');
-            window.scrollTo({
-              top: 0,
-              behavior: 'smooth'
-            });
           }
+          window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+          });
         });
         
         // 用户菜单
         const userMenuBtn = document.getElementById('userMenuBtn');
         const userDropdown = document.getElementById('userDropdown');
         
-        userMenuBtn.addEventListener('click', () => {
-          userDropdown.classList.toggle('hidden');
-        });
+        if (userMenuBtn) {
+          userMenuBtn.addEventListener('click', () => {
+            userDropdown.classList.toggle('hidden');
+          });
+        }
+        
+        // 管理员菜单
+        const adminMenuBtn = document.getElementById('adminMenuBtn');
+        const adminDropdown = document.getElementById('adminDropdown');
+        
+        if (adminMenuBtn) {
+          adminMenuBtn.addEventListener('click', () => {
+            adminDropdown.classList.toggle('hidden');
+          });
+        }
         
         // 点击外部关闭用户菜单
         document.addEventListener('click', (e) => {
-          if (!userMenuBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+          if (userMenuBtn && !userMenuBtn.contains(e.target) && userDropdown && !userDropdown.contains(e.target)) {
             userDropdown.classList.add('hidden');
+          }
+          
+          if (adminMenuBtn && !adminMenuBtn.contains(e.target) && adminDropdown && !adminDropdown.contains(e.target)) {
+            adminDropdown.classList.add('hidden');
           }
         });
         
@@ -2544,13 +3333,31 @@
           });
         });
         
+        // 管理员菜单项点击
+        document.querySelectorAll('.admin-menu-item').forEach(item => {
+          item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetId = item.getAttribute('href').substring(1);
+            this.showAdminPage(targetId);
+            adminDropdown.classList.add('hidden');
+          });
+        });
+        
         // 退出登录
         document.getElementById('logoutBtn').addEventListener('click', () => this.logout());
         document.getElementById('mobileLogoutBtn').addEventListener('click', () => this.logout());
         
+        // 退出管理员
+        document.getElementById('adminLogoutBtn').addEventListener('click', () => this.adminLogout());
+        document.getElementById('mobileAdminLogoutBtn').addEventListener('click', () => this.adminLogout());
+        
         // 登录/注册切换
         document.getElementById('showLogin').addEventListener('click', () => this.showLoginForm());
         document.getElementById('showRegister').addEventListener('click', () => this.showRegisterForm());
+        
+        // 管理员登录切换
+        document.getElementById('showAdminLogin').addEventListener('click', () => this.showAdminLoginForm());
+        document.getElementById('backToUserLogin').addEventListener('click', () => this.showLoginForm());
         
         // 登录表单提交
         document.getElementById('loginFormElement').addEventListener('submit', (e) => {
@@ -2562,6 +3369,12 @@
         document.getElementById('registerFormElement').addEventListener('submit', (e) => {
           e.preventDefault();
           this.handleRegister();
+        });
+        
+        // 管理员登录表单提交
+        document.getElementById('adminLoginFormElement').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.handleAdminLogin();
         });
         
         // 激活设备
@@ -2583,11 +3396,14 @@
         });
         
         // 百宝袋选择器更改
-        document.getElementById('pocketSelector').addEventListener('change', (e) => {
-          this.selectedPocketId = e.target.value;
-          this.renderItemsList();
-          this.updateStorageStatus();
-        });
+        const pocketSelector = document.getElementById('pocketSelector');
+        if (pocketSelector) {
+          pocketSelector.addEventListener('change', (e) => {
+            this.selectedPocketId = e.target.value;
+            this.renderItemsList();
+            this.updateStorageStatus();
+          });
+        }
         
         // 购买存储格按钮
         document.querySelectorAll('.purchase-btn').forEach(btn => {
@@ -2602,10 +3418,13 @@
         document.getElementById('confirmPurchase').addEventListener('click', () => this.handlePurchase());
         
         // 远程取物百宝袋选择器
-        document.getElementById('retrievePocketSelector').addEventListener('change', (e) => {
-          this.selectedPocketId = e.target.value;
-          this.renderAvailableItemsList();
-        });
+        const retrievePocketSelector = document.getElementById('retrievePocketSelector');
+        if (retrievePocketSelector) {
+          retrievePocketSelector.addEventListener('change', (e) => {
+            this.selectedPocketId = e.target.value;
+            this.renderAvailableItemsList();
+          });
+        }
         
         // 远程取物
         document.getElementById('retrieveItemsBtn').addEventListener('click', () => this.performRetrieve());
@@ -2619,6 +3438,32 @@
           document.querySelectorAll('.retrieve-checkbox').forEach(checkbox => {
             checkbox.checked = false;
           });
+        });
+        
+        // 生成激活码按钮
+        document.getElementById('generateCodesBtn').addEventListener('click', () => this.handleGenerateCodes());
+        
+        // 复制所有激活码按钮
+        document.getElementById('copyAllCodes').addEventListener('click', () => this.copyAllCodesToClipboard());
+        
+        // 搜索用户
+        document.getElementById('searchUsers').addEventListener('input', (e) => {
+          this.searchUsers(e.target.value);
+        });
+        
+        // 搜索百宝袋
+        document.getElementById('searchPockets').addEventListener('input', (e) => {
+          this.searchPockets(e.target.value);
+        });
+        
+        // 搜索激活码
+        document.getElementById('searchCodes').addEventListener('input', (e) => {
+          this.searchCodes(e.target.value);
+        });
+        
+        // 激活码状态筛选
+        document.getElementById('filterCodeStatus').addEventListener('change', (e) => {
+          this.filterCodesByStatus(e.target.value);
         });
       },
       
@@ -2653,6 +3498,26 @@
         // 登录成功
         loginError.classList.add('hidden');
         this.saveCurrentUser(user, rememberMe);
+      },
+      
+      // 处理管理员登录
+      handleAdminLogin() {
+        const username = document.getElementById('adminUsername').value.trim();
+        const password = document.getElementById('adminPassword').value.trim();
+        
+        const adminLoginError = document.getElementById('adminLoginError');
+        const adminLoginErrorMsg = document.getElementById('adminLoginErrorMsg');
+        
+        // 验证管理员凭据
+        if (username === this.adminUsername && password === this.adminPassword) {
+          // 登录成功
+          adminLoginError.classList.add('hidden');
+          this.saveCurrentAdmin({ username });
+        } else {
+          // 登录失败
+          adminLoginErrorMsg.textContent = '管理员账号或密码不正确';
+          adminLoginError.classList.remove('hidden');
+        }
       },
       
       // 处理注册
@@ -2753,7 +3618,8 @@
       
       // 处理激活
       handleActivation() {
-        const activationCode = document.getElementById('activationCode').value.trim();
+        const activationCode = document.getElementById('activationCode').value.trim().toUpperCase();
+        const activationPassword = document.getElementById('activationPassword').value.trim();
         const pocketName = document.getElementById('pocketName').value.trim();
         
         const activationSuccess = document.getElementById('activationSuccess');
@@ -2770,10 +3636,60 @@
           return;
         }
         
+        if (!activationPassword) {
+          activationErrorMsg.textContent = this.currentLang === 'en' 
+            ? "Please enter activation password." 
+            : "请输入激活密码。";
+          activationError.classList.remove('hidden');
+          activationSuccess.classList.add('hidden');
+          return;
+        }
+        
         if (!pocketName) {
           activationErrorMsg.textContent = this.currentLang === 'en' 
             ? "Please enter a pocket name." 
             : "请输入百宝袋名称。";
+          activationError.classList.remove('hidden');
+          activationSuccess.classList.add('hidden');
+          return;
+        }
+        
+        // 检查激活码是否存在
+        const codeData = this.activationCodes[activationCode];
+        if (!codeData) {
+          activationErrorMsg.textContent = this.currentLang === 'en' 
+            ? "Activation code not found." 
+            : "激活码不存在。";
+          activationError.classList.remove('hidden');
+          activationSuccess.classList.add('hidden');
+          return;
+        }
+        
+        // 检查激活码是否已被使用
+        if (codeData.used) {
+          activationErrorMsg.textContent = this.currentLang === 'en' 
+            ? "Activation code has already been used." 
+            : "激活码已被使用。";
+          activationError.classList.remove('hidden');
+          activationSuccess.classList.add('hidden');
+          return;
+        }
+        
+        // 检查密码是否正确
+        if (codeData.password !== activationPassword) {
+          activationErrorMsg.textContent = this.currentLang === 'en' 
+            ? "Incorrect activation password." 
+            : "激活密码不正确。";
+          activationError.classList.remove('hidden');
+          activationSuccess.classList.add('hidden');
+          return;
+        }
+        
+        // 检查激活码是否过期
+        if (codeData.expiresAt && new Date(codeData.expiresAt) < new Date()) {
+          activationErrorMsg.textContent = this.currentLang === 'en' 
+            ? "Activation code has expired." 
+            : "激活码已过期。";
           activationError.classList.remove('hidden');
           activationSuccess.classList.add('hidden');
           return;
@@ -2843,7 +3759,7 @@
       handleIPBinding() {
         const ipAddress = document.getElementById('ipAddress').value.trim();
         const fullName = document.getElementById('fullName').value.trim();
-        const hkid = document.getElementById('hkid').value.trim();
+        const hkid = document.getElementById('hkid').value.trim().toUpperCase();
         const pocketId = document.getElementById('selectPocketForBinding').value;
         
         const ipBindingSuccess = document.getElementById('ipBindingSuccess');
@@ -2876,7 +3792,7 @@
         bindIPBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (this.currentLang === 'en' ? 'Binding...' : '绑定中...');
         
         setTimeout(() => {
-          // 创建新的百宝袋
+          // 获取激活码和百宝袋名称
           const activationCode = sessionStorage.getItem('pendingActivationCode');
           const pocketName = sessionStorage.getItem('pendingPocketName');
           
@@ -2916,6 +3832,15 @@
           userData.pockets.push(newPocket);
           this.saveUserData(this.currentUser.id, userData);
           
+          // 更新激活码状态
+          if (this.activationCodes[activationCode]) {
+            this.activationCodes[activationCode].used = true;
+            this.activationCodes[activationCode].userId = this.currentUser.id;
+            this.activationCodes[activationCode].pocketId = newPocket.id;
+            this.activationCodes[activationCode].activatedAt = new Date().toISOString();
+            this.saveActivationCodesToStorage();
+          }
+          
           // 清除临时存储
           sessionStorage.removeItem('pendingActivationCode');
           sessionStorage.removeItem('pendingPocketName');
@@ -2932,6 +3857,7 @@
           
           // 重置表单
           document.getElementById('activationCode').value = '';
+          document.getElementById('activationPassword').value = '';
           document.getElementById('pocketName').value = '';
           document.getElementById('ipAddress').value = '';
           document.getElementById('fullName').value = '';
@@ -3009,7 +3935,8 @@
           id: 'item_' + Date.now(),
           name: itemName,
           category: itemCategory,
-          description: itemDescription || (this.currentLang === 'en' ? 'No description' : '无描述')
+          description: itemDescription || (this.currentLang === 'en' ? 'No description' : '无描述'),
+          addedAt: new Date().toISOString()
         };
         
         // 添加到百宝袋
@@ -3089,6 +4016,37 @@
         
         // 显示购买模态框
         document.getElementById('purchaseModal').classList.remove('hidden');
+        
+        // 更新百宝袋选择
+        const purchasePocketSelector = document.getElementById('purchasePocketSelector');
+        if (purchasePocketSelector && purchasePocketSelector.options.length > 0) {
+          // 如果已经有选中的百宝袋，保持选中
+          if (this.selectedPocketId) {
+            purchasePocketSelector.value = this.selectedPocketId;
+          } else {
+            // 否则选择第一个百宝袋
+            purchasePocketSelector.selectedIndex = 1;
+          }
+          this.updatePurchasePocketInfo();
+        }
+        
+        // 添加百宝袋选择更改事件
+        purchasePocketSelector.addEventListener('change', () => this.updatePurchasePocketInfo());
+      },
+      
+      // 更新购买百宝袋信息
+      updatePurchasePocketInfo() {
+        const purchasePocketSelector = document.getElementById('purchasePocketSelector');
+        const purchasePocketName = document.getElementById('purchasePocketName');
+        
+        if (purchasePocketSelector && purchasePocketName) {
+          const selectedOption = purchasePocketSelector.options[purchasePocketSelector.selectedIndex];
+          if (selectedOption.value) {
+            purchasePocketName.textContent = selectedOption.text;
+          } else {
+            purchasePocketName.textContent = this.currentLang === 'en' ? 'Not selected' : '未选择';
+          }
+        }
       },
       
       // 关闭购买模态框
@@ -3096,6 +4054,12 @@
         document.getElementById('purchaseModal').classList.add('hidden');
         sessionStorage.removeItem('pendingPurchaseSlots');
         sessionStorage.removeItem('pendingPurchasePrice');
+        
+        // 移除百宝袋选择更改事件
+        const purchasePocketSelector = document.getElementById('purchasePocketSelector');
+        if (purchasePocketSelector) {
+          purchasePocketSelector.removeEventListener('change', () => this.updatePurchasePocketInfo());
+        }
       },
       
       // 处理购买
@@ -3136,10 +4100,17 @@
           pocket.purchasedSlots += planSlots;
           
           // 添加购买记录
+          if (!pocket.purchaseHistory) {
+            pocket.purchaseHistory = [];
+          }
+          
           pocket.purchaseHistory.push({
             slots: planSlots,
             price: planPrice,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
+            planName: planSlots === 5 ? (this.currentLang === 'en' ? 'Basic Plan' : '基础套餐') : 
+                     planSlots === 13 ? (this.currentLang === 'en' ? 'Advanced Plan' : '进阶套餐') : 
+                     (this.currentLang === 'en' ? 'Premium Plan' : '高级套餐')
           });
           
           // 保存更新后的数据
@@ -3172,6 +4143,549 @@
             'success'
           );
         }, 2000);
+      },
+      
+      // 处理生成激活码
+      handleGenerateCodes() {
+        const codeCount = parseInt(document.getElementById('codeCount').value);
+        const passwordLength = parseInt(document.getElementById('passwordLength').value);
+        const complexity = document.querySelector('input[name="complexity"]:checked').value;
+        const expiryDate = document.getElementById('expiryDate').value;
+        
+        if (codeCount < 1 || codeCount > 100) {
+          this.showToast('生成数量必须在1到100之间', 'error');
+          return;
+        }
+        
+        if (passwordLength < 6 || passwordLength > 20) {
+          this.showToast('密码长度必须在6到20之间', 'error');
+          return;
+        }
+        
+        // 生成激活码
+        const generatedCodes = [];
+        
+        for (let i = 0; i < codeCount; i++) {
+          const code = this.generateActivationCode();
+          const password = this.generatePassword(passwordLength, complexity);
+          
+          // 检查激活码是否已存在
+          if (!this.activationCodes[code]) {
+            const codeData = {
+              password: password,
+              used: false,
+              userId: null,
+              pocketId: null,
+              generatedAt: new Date().toISOString(),
+              expiresAt: expiryDate || null,
+              generatedBy: this.currentAdmin ? this.currentAdmin.username : 'system'
+            };
+            
+            this.activationCodes[code] = codeData;
+            generatedCodes.push({ code, password, status: '未使用' });
+          } else {
+            // 如果激活码已存在，重新生成
+            i--;
+          }
+        }
+        
+        // 保存激活码到本地存储
+        this.saveActivationCodesToStorage();
+        
+        // 显示生成的激活码
+        this.displayGeneratedCodes(generatedCodes);
+        
+        // 显示成功消息
+        this.showToast(`成功生成 ${codeCount} 个激活码`, 'success');
+      },
+      
+      // 显示生成的激活码
+      displayGeneratedCodes(codes) {
+        const container = document.getElementById('generatedCodesContainer');
+        const list = document.getElementById('generatedCodesList');
+        
+        container.classList.remove('hidden');
+        list.innerHTML = '';
+        
+        codes.forEach((codeData, index) => {
+          const row = document.createElement('tr');
+          row.className = 'border-b border-monkey-gray/30 last:border-0';
+          row.innerHTML = `
+            <td class="py-2 px-3">${index + 1}</td>
+            <td class="py-2 px-3 font-mono">${codeData.code}</td>
+            <td class="py-2 px-3 font-mono">${codeData.password}</td>
+            <td class="py-2 px-3">
+              <span class="px-2 py-1 rounded-full text-xs bg-green-500/20 text-green-400">${codeData.status}</span>
+            </td>
+          `;
+          list.appendChild(row);
+        });
+      },
+      
+      // 复制所有激活码到剪贴板
+      copyAllCodesToClipboard() {
+        const rows = document.querySelectorAll('#generatedCodesList tr');
+        let text = '序号,激活码,密码,状态\n';
+        
+        rows.forEach((row, index) => {
+          const cells = row.querySelectorAll('td');
+          const code = cells[1].textContent;
+          const password = cells[2].textContent;
+          const status = cells[3].textContent;
+          text += `${index + 1},${code},${password},${status}\n`;
+        });
+        
+        navigator.clipboard.writeText(text).then(() => {
+          this.showToast('激活码已复制到剪贴板', 'success');
+        }).catch(err => {
+          this.showToast('复制失败: ' + err, 'error');
+        });
+      },
+      
+      // 渲染管理员用户列表
+      renderAdminUsersList() {
+        const usersList = document.getElementById('usersList');
+        const noUsersMessage = document.getElementById('noUsersMessage');
+        
+        if (!usersList) return;
+        
+        // 清空列表
+        usersList.innerHTML = '';
+        
+        const users = Object.values(this.users);
+        
+        if (users.length === 0) {
+          noUsersMessage.classList.remove('hidden');
+          return;
+        }
+        
+        noUsersMessage.classList.add('hidden');
+        
+        // 渲染用户列表
+        users.forEach(user => {
+          const userData = this.getUserData(user.id);
+          const pocketCount = userData ? userData.pockets.length : 0;
+          
+          const row = document.createElement('tr');
+          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+          row.innerHTML = `
+            <td class="py-3 px-4">${user.username}</td>
+            <td class="py-3 px-4">${user.email}</td>
+            <td class="py-3 px-4">${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td class="py-3 px-4">${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : '从未登录'}</td>
+            <td class="py-3 px-4">${pocketCount}</td>
+            <td class="py-3 px-4">
+              <button class="text-monkey-blue hover:text-monkey-blue/80 text-sm view-user-pockets" data-userid="${user.id}">
+                <i class="fa fa-eye mr-1"></i> 查看百宝袋
+              </button>
+            </td>
+          `;
+          usersList.appendChild(row);
+        });
+        
+        // 添加查看百宝袋按钮事件监听
+        document.querySelectorAll('.view-user-pockets').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const userId = btn.getAttribute('data-userid');
+            this.viewUserPockets(userId);
+          });
+        });
+      },
+      
+      // 查看用户百宝袋
+      viewUserPockets(userId) {
+        const user = Object.values(this.users).find(u => u.id === userId);
+        if (!user) return;
+        
+        const userData = this.getUserData(userId);
+        if (!userData) return;
+        
+        // 创建模态框显示用户百宝袋
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+          <div class="bg-monkey-darker rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-monkey-gray/50">
+            <div class="flex justify-between items-center p-6 border-b border-monkey-gray/50">
+              <h3 class="text-xl font-semibold">${user.username} 的百宝袋</h3>
+              <button class="text-gray-400 hover:text-white close-user-pockets-modal">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+              ${userData.pockets.length === 0 ? 
+                '<p class="text-center text-gray-500 py-8">该用户尚未添加任何百宝袋</p>' : 
+                this.renderUserPocketsTable(userData.pockets)}
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 添加关闭事件
+        modal.querySelector('.close-user-pockets-modal').addEventListener('click', () => {
+          document.body.removeChild(modal);
+        });
+      },
+      
+      // 渲染用户百宝袋表格
+      renderUserPocketsTable(pockets) {
+        let html = '<table class="w-full">';
+        html += `
+          <thead>
+            <tr class="border-b border-monkey-gray">
+              <th class="text-left py-3 px-4">激活码</th>
+              <th class="text-left py-3 px-4">名称</th>
+              <th class="text-left py-3 px-4">IP地址</th>
+              <th class="text-left py-3 px-4">存储格</th>
+              <th class="text-left py-3 px-4">物品数量</th>
+              <th class="text-left py-3 px-4">激活日期</th>
+            </tr>
+          </thead>
+          <tbody>
+        `;
+        
+        pockets.forEach(pocket => {
+          html += `
+            <tr class="border-b border-monkey-gray/30 hover:bg-monkey-gray/30">
+              <td class="py-3 px-4">${pocket.activationCode}</td>
+              <td class="py-3 px-4">${pocket.name}</td>
+              <td class="py-3 px-4">${pocket.ipAddress || '未绑定'}</td>
+              <td class="py-3 px-4">${pocket.usedSlots}/${pocket.storageSlots}</td>
+              <td class="py-3 px-4">${pocket.items.length}</td>
+              <td class="py-3 px-4">${new Date(pocket.createdAt).toLocaleDateString()}</td>
+            </tr>
+          `;
+        });
+        
+        html += '</tbody></table>';
+        return html;
+      },
+      
+      // 渲染管理员百宝袋列表
+      renderAdminPocketsList() {
+        const pocketsList = document.getElementById('pocketsListAdmin');
+        const noPocketsAdminMessage = document.getElementById('noPocketsAdminMessage');
+        
+        if (!pocketsList) return;
+        
+        // 清空列表
+        pocketsList.innerHTML = '';
+        
+        // 收集所有百宝袋
+        let allPockets = [];
+        
+        Object.values(this.users).forEach(user => {
+          const userData = this.getUserData(user.id);
+          if (userData && userData.pockets.length > 0) {
+            userData.pockets.forEach(pocket => {
+              allPockets.push({
+                ...pocket,
+                username: user.username,
+                userEmail: user.email
+              });
+            });
+          }
+        });
+        
+        if (allPockets.length === 0) {
+          noPocketsAdminMessage.classList.remove('hidden');
+          return;
+        }
+        
+        noPocketsAdminMessage.classList.add('hidden');
+        
+        // 渲染百宝袋列表
+        allPockets.forEach(pocket => {
+          const row = document.createElement('tr');
+          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+          row.innerHTML = `
+            <td class="py-3 px-4">${pocket.activationCode}</td>
+            <td class="py-3 px-4">${pocket.name}</td>
+            <td class="py-3 px-4">${pocket.username} (${pocket.userEmail})</td>
+            <td class="py-3 px-4">${pocket.ipAddress || '未绑定'}</td>
+            <td class="py-3 px-4">${pocket.usedSlots}/${pocket.storageSlots}</td>
+            <td class="py-3 px-4">${pocket.items.length}</td>
+            <td class="py-3 px-4">${new Date(pocket.createdAt).toLocaleDateString()}</td>
+            <td class="py-3 px-4">
+              <button class="text-monkey-blue hover:text-monkey-blue/80 text-sm view-pocket-items" data-pocketid="${pocket.id}" data-userid="${pocket.userId}">
+                <i class="fa fa-box mr-1"></i> 查看物品
+              </button>
+            </td>
+          `;
+          pocketsList.appendChild(row);
+        });
+        
+        // 添加查看物品按钮事件监听
+        document.querySelectorAll('.view-pocket-items').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const pocketId = btn.getAttribute('data-pocketid');
+            const userId = btn.getAttribute('data-userid');
+            this.viewPocketItems(pocketId, userId);
+          });
+        });
+      },
+      
+      // 查看百宝袋物品
+      viewPocketItems(pocketId, userId) {
+        const userData = this.getUserData(userId);
+        if (!userData) return;
+        
+        const pocket = userData.pockets.find(p => p.id === pocketId);
+        if (!pocket) return;
+        
+        // 创建模态框显示百宝袋物品
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+          <div class="bg-monkey-darker rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-monkey-gray/50">
+            <div class="flex justify-between items-center p-6 border-b border-monkey-gray/50">
+              <h3 class="text-xl font-semibold">${pocket.name} 的物品 (${pocket.activationCode})</h3>
+              <button class="text-gray-400 hover:text-white close-pocket-items-modal">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+              ${pocket.items.length === 0 ? 
+                '<p class="text-center text-gray-500 py-8">该百宝袋中暂无物品</p>' : 
+                this.renderPocketItemsTable(pocket.items)}
+            </div>
+          </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 添加关闭事件
+        modal.querySelector('.close-pocket-items-modal').addEventListener('click', () => {
+          document.body.removeChild(modal);
+        });
+      },
+      
+      // 渲染百宝袋物品表格
+      renderPocketItemsTable(items) {
+        const categoryLabels = {
+          'electronics': '电子产品',
+          'clothing': '衣物',
+          'accessories': '配件',
+          'documents': '文件',
+          'personal': '个人物品',
+          'other': '其他'
+        };
+        
+        let html = '<table class="w-full">';
+        html += `
+          <thead>
+            <tr class="border-b border-monkey-gray">
+              <th class="text-left py-3 px-4">物品名称</th>
+              <th class="text-left py-3 px-4">类别</th>
+              <th class="text-left py-3 px-4">描述</th>
+              <th class="text-left py-3 px-4">添加时间</th>
+            </tr>
+          </thead>
+          <tbody>
+        `;
+        
+        items.forEach(item => {
+          html += `
+            <tr class="border-b border-monkey-gray/30 hover:bg-monkey-gray/30">
+              <td class="py-3 px-4">${item.name}</td>
+              <td class="py-3 px-4">${categoryLabels[item.category] || item.category}</td>
+              <td class="py-3 px-4">${item.description || '无描述'}</td>
+              <td class="py-3 px-4">${item.addedAt ? new Date(item.addedAt).toLocaleDateString() : '未知'}</td>
+            </tr>
+          `;
+        });
+        
+        html += '</tbody></table>';
+        return html;
+      },
+      
+      // 渲染管理员激活码列表
+      renderAdminCodesList() {
+        const codesList = document.getElementById('codesList');
+        const noCodesMessage = document.getElementById('noCodesMessage');
+        
+        if (!codesList) return;
+        
+        // 清空列表
+        codesList.innerHTML = '';
+        
+        const codes = Object.entries(this.activationCodes);
+        
+        if (codes.length === 0) {
+          noCodesMessage.classList.remove('hidden');
+          return;
+        }
+        
+        noCodesMessage.classList.add('hidden');
+        
+        // 渲染激活码列表
+        codes.forEach(([code, data]) => {
+          // 获取使用者信息
+          let userName = '未使用';
+          if (data.userId) {
+            const user = Object.values(this.users).find(u => u.id === data.userId);
+            if (user) {
+              userName = user.username;
+            }
+          }
+          
+          // 确定状态
+          let status = '未使用';
+          let statusColor = 'bg-green-500/20 text-green-400';
+          
+          if (data.used) {
+            status = '已使用';
+            statusColor = 'bg-blue-500/20 text-blue-400';
+          }
+          
+          if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
+            status = '已过期';
+            statusColor = 'bg-red-500/20 text-red-400';
+          }
+          
+          const row = document.createElement('tr');
+          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+          row.innerHTML = `
+            <td class="py-3 px-4 font-mono">${code}</td>
+            <td class="py-3 px-4 font-mono">${data.password}</td>
+            <td class="py-3 px-4">
+              <span class="px-2 py-1 rounded-full text-xs ${statusColor}">${status}</span>
+            </td>
+            <td class="py-3 px-4">${userName}</td>
+            <td class="py-3 px-4">${new Date(data.generatedAt).toLocaleDateString()}</td>
+            <td class="py-3 px-4">${data.expiresAt ? new Date(data.expiresAt).toLocaleDateString() : '永久有效'}</td>
+            <td class="py-3 px-4">
+              <button class="text-monkey-red hover:text-monkey-red/80 text-sm delete-code" data-code="${code}">
+                <i class="fa fa-trash mr-1"></i> 删除
+              </button>
+            </td>
+          `;
+          codesList.appendChild(row);
+        });
+        
+        // 添加删除激活码按钮事件监听
+        document.querySelectorAll('.delete-code').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const code = btn.getAttribute('data-code');
+            this.deleteActivationCode(code);
+          });
+        });
+      },
+      
+      // 删除激活码
+      deleteActivationCode(code) {
+        if (!confirm(`确定要删除激活码 ${code} 吗？`)) return;
+        
+        if (this.activationCodes[code]) {
+          delete this.activationCodes[code];
+          this.saveActivationCodesToStorage();
+          this.renderAdminCodesList();
+          this.updateAdminDashboard();
+          this.showToast('激活码删除成功', 'success');
+        }
+      },
+      
+      // 搜索用户
+      searchUsers(query) {
+        const rows = document.querySelectorAll('#usersList tr');
+        const noUsersMessage = document.getElementById('noUsersMessage');
+        
+        let hasResults = false;
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          if (text.includes(query.toLowerCase())) {
+            row.style.display = '';
+            hasResults = true;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        if (hasResults) {
+          noUsersMessage.classList.add('hidden');
+        } else {
+          noUsersMessage.classList.remove('hidden');
+        }
+      },
+      
+      // 搜索百宝袋
+      searchPockets(query) {
+        const rows = document.querySelectorAll('#pocketsListAdmin tr');
+        const noPocketsAdminMessage = document.getElementById('noPocketsAdminMessage');
+        
+        let hasResults = false;
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          if (text.includes(query.toLowerCase())) {
+            row.style.display = '';
+            hasResults = true;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        if (hasResults) {
+          noPocketsAdminMessage.classList.add('hidden');
+        } else {
+          noPocketsAdminMessage.classList.remove('hidden');
+        }
+      },
+      
+      // 搜索激活码
+      searchCodes(query) {
+        const rows = document.querySelectorAll('#codesList tr');
+        const noCodesMessage = document.getElementById('noCodesMessage');
+        
+        let hasResults = false;
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          if (text.includes(query.toLowerCase())) {
+            row.style.display = '';
+            hasResults = true;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+        
+        if (hasResults) {
+          noCodesMessage.classList.add('hidden');
+        } else {
+          noCodesMessage.classList.remove('hidden');
+        }
+      },
+      
+      // 按状态筛选激活码
+      filterCodesByStatus(status) {
+        const rows = document.querySelectorAll('#codesList tr');
+        const noCodesMessage = document.getElementById('noCodesMessage');
+        
+        let hasResults = false;
+        
+        rows.forEach(row => {
+          const statusCell = row.querySelector('td:nth-child(3)');
+          if (statusCell) {
+            const codeStatus = statusCell.textContent.trim();
+            
+            if (status === 'all' || 
+                (status === 'unused' && codeStatus === '未使用') ||
+                (status === 'used' && codeStatus === '已使用') ||
+                (status === 'expired' && codeStatus === '已过期')) {
+              row.style.display = '';
+              hasResults = true;
+            } else {
+              row.style.display = 'none';
+            }
+          }
+        });
+        
+        if (hasResults) {
+          noCodesMessage.classList.add('hidden');
+        } else {
+          noCodesMessage.classList.remove('hidden');
+        }
       }
     };
     
