@@ -18,10 +18,11 @@ const __dirname = path.dirname(__filename)
 
 const PORT = process.env.PORT || 3000
 const JWT_SECRET = process.env.JWT_SECRET || 'insecure'
+const DATA_DIR = process.env.DATA_DIR || __dirname
 
 let db
 async function initDb() {
-  db = await open({ filename: path.join(__dirname, 'data.db'), driver: sqlite3.Database })
+  db = await open({ filename: path.join(DATA_DIR, 'data.db'), driver: sqlite3.Database })
   await db.exec(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS users (

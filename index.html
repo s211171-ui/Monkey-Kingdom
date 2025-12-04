@@ -1412,7 +1412,17 @@
     // 应用程序状态管理
     // ============================
     const AppState = {
-      apiBase: 'http://localhost:3000/api',
+      apiBase: (function(){
+        try {
+          const saved = localStorage.getItem('mp_api_base');
+          if (saved) return saved;
+        } catch(e) {}
+        const origin = window.location.origin;
+        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+          return 'http://localhost:3000/api';
+        }
+        return '/api';
+      })(),
       authToken: null,
       // 当前用户信息
       currentUser: null,
@@ -3487,7 +3497,7 @@
         sendCodeBtn.textContent = this.currentLang === 'en' ? 'Resend in 300s' : '300秒后重发';
         fetch(`${this.apiBase}/auth/send-code`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) })
           .then(async r=>{ if(!r.ok) throw new Error('send_failed'); return r.json() })
-          .then(()=>{
+          .then((data)=>{
             let timeLeft = 300;
             const timerInterval = setInterval(()=>{
               timeLeft--;
@@ -3495,7 +3505,11 @@
               sendCodeBtn.textContent = this.currentLang === 'en' ? `Resend in ${timeLeft}s` : `${timeLeft}秒后重发`;
               if (timeLeft <= 0) { clearInterval(timerInterval); sendCodeBtn.disabled = false; sendCodeBtn.textContent = this.currentLang==='en'?'Send Code':'发送验证码'; verificationTimer.textContent=''; }
             },1000)
-            this.showToast(this.currentLang==='en'?`Verification code sent to ${email}`:`验证码已发送到 ${email}`,'success')
+            if (data && data.previewUrl) {
+              this.showToast(this.currentLang==='en'?`Verification code sent (preview): ${data.previewUrl}`:`验证码已发送（预览链接）：${data.previewUrl}`,'success')
+            } else {
+              this.showToast(this.currentLang==='en'?`Verification code sent to ${email}`:`验证码已发送到 ${email}`,'success')
+            }
           })
           .catch(()=>{ sendCodeBtn.disabled=false; sendCodeBtn.textContent=this.currentLang==='en'?'Send Code':'发送验证码'; this.showToast(this.currentLang==='en'?'Failed to send code':'发送验证码失败','error') })
       },
