@@ -8,6 +8,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google登录 -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- 配置Tailwind -->
   <script>
     tailwind.config = {
@@ -245,6 +247,26 @@
             </button>
           </form>
           
+          <!-- Google登录按钮 -->
+          <div class="mt-6">
+            <div id="g_id_onload"
+                data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleGoogleSignIn"
+                data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin w-full"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="filled_black"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left"
+                data-width="100%">
+            </div>
+          </div>
+          
           <div class="text-center mt-6">
             <button id="showAdminLogin" class="text-sm text-monkey-orange hover:text-monkey-orange/80 transition-colors">
               <i class="fa fa-lock mr-1"></i> <span data-i18n="adminLoginLink">管理员登录</span>
@@ -297,6 +319,19 @@
               <span data-i18n="authRegisterButton">注册</span>
             </button>
           </form>
+          
+          <!-- Google注册按钮 -->
+          <div class="mt-6">
+            <div class="g_id_signin w-full"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="filled_black"
+                data-text="signup_with"
+                data-size="large"
+                data-logo_alignment="left"
+                data-width="100%">
+            </div>
+          </div>
           
           <div id="registerError" class="hidden bg-monkey-red/20 border border-monkey-red/50 rounded-lg p-4 mt-6">
             <div class="flex items-start">
@@ -557,11 +592,6 @@
                   <p class="text-xs text-gray-500 mt-1" data-i18n="hkidHint">格式: 1个字母 + 6位数字 + 括号内1位校验码</p>
                 </div>
                 
-
-                  <select id="selectPocketForBinding" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors">
-                  </select>
-                </div>
-                
                 <button id="bindIPBtn" class="w-full bg-monkey-yellow hover:bg-monkey-yellow/90 text-monkey-darker font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02]">
                   <span data-i18n="bindIPButton">绑定IP地址</span>
                 </button>
@@ -626,7 +656,7 @@
           <div class="mt-6 flex flex-wrap justify-center gap-4">
             <div class="inline-flex items-center bg-monkey-gray/50 rounded-full px-4 py-2">
               <i class="fa fa-box text-monkey-yellow mr-2"></i>
-              <span class="text-sm" data-i18n="storageStatus">已使用 <span id="usedSlots">0</span>/<span id="totalSlots">0</span> 存储格</span>
+              <span class="text-sm" data-i18n="storageStatus">已使用 <span id="usedSlots">0</span>/<span id="totalSlots">15</span> 存储格</span>
             </div>
             
             <div id="pocketSelectorContainer" class="hidden">
@@ -2215,7 +2245,6 @@
         
         // 获取所有选择器
         const selectors = [
-          document.getElementById('selectPocketForBinding'),
           document.getElementById('pocketSelector'),
           document.getElementById('targetPocket'),
           document.getElementById('purchasePocketSelector'),
@@ -2849,7 +2878,7 @@
             // 物品管理
             itemsTitle: "Manage Your <span class='text-monkey-yellow'>Items</span>",
             itemsDescription: "Add, organize and manage your personal items",
-            storageStatus: "Used <span id='usedSlots'>0</span>/<span id='totalSlots'>0</span> storage slots",
+            storageStatus: "Used <span id='usedSlots'>0</span>/<span id='totalSlots'>15</span> storage slots",
             addItemTitle: "Add New Item",
             itemNameLabel: "Item Name",
             itemNamePlaceholder: "e.g. Laptop, Umbrella",
@@ -3049,7 +3078,7 @@
             // 物品管理
             itemsTitle: "管理你的<span class='text-monkey-yellow'>物品</span>",
             itemsDescription: "添加、组织和管理您的个人物品",
-            storageStatus: "已使用 <span id='usedSlots'>0</span>/<span id='totalSlots'>0</span> 存储格",
+            storageStatus: "已使用 <span id='usedSlots'>0</span>/<span id='totalSlots'>15</span> 存储格",
             addItemTitle: "添加新物品",
             itemNameLabel: "物品名称",
             itemNamePlaceholder: "例如: 笔记本电脑、雨伞",
@@ -3709,7 +3738,6 @@
           document.getElementById('hkid').disabled = false;
           document.getElementById('bindIPBtn').disabled = false;
           
-          
           // 保存激活码到临时存储
           sessionStorage.setItem('pendingActivationCode', activationCode);
           sessionStorage.setItem('pendingPocketName', pocketName);
@@ -3717,11 +3745,13 @@
           // 更新百宝袋选择器
           this.updatePocketSelectors();
           
-          // 选择新激活的百宝袋
-          const selectPocketForBinding = document.getElementById('selectPocketForBinding');
-          if (selectPocketForBinding.options.length > 0) {
-            selectPocketForBinding.selectedIndex = selectPocketForBinding.options.length - 1;
-          }
+          // 显示成功消息
+          this.showToast(
+            this.currentLang === 'en' 
+              ? 'Activation successful! Please complete IP binding.' 
+              : '激活成功！请完成IP绑定。',
+            'success'
+          );
           
           // 重置按钮
           activateDeviceBtn.disabled = false;
@@ -3756,14 +3786,13 @@
         const ipAddress = document.getElementById('ipAddress').value.trim();
         const fullName = document.getElementById('fullName').value.trim();
         const hkid = document.getElementById('hkid').value.trim().toUpperCase();
-        const pocketId = document.getElementById('selectPocketForBinding').value;
         
         const ipBindingSuccess = document.getElementById('ipBindingSuccess');
         const ipBindingError = document.getElementById('ipBindingError');
         const ipBindingErrorMsg = document.getElementById('ipBindingErrorMsg');
         
         // 验证输入
-        if (!ipAddress || !fullName || !hkid || !pocketId) {
+        if (!ipAddress || !fullName || !hkid) {
           ipBindingErrorMsg.textContent = this.currentLang === 'en'
             ? "Please fill in all fields."
             : "请填写所有字段。";
@@ -4682,7 +4711,57 @@
         } else {
           noCodesMessage.classList.remove('hidden');
         }
+      },
+      
+      // Google登录处理
+      handleGoogleSignIn(response) {
+        // 解码JWT令牌
+        const payload = JSON.parse(atob(response.credential.split('.')[1]));
+        
+        // 创建或更新用户
+        const email = payload.email;
+        const name = payload.name;
+        
+        let user = this.users[email];
+        
+        if (!user) {
+          // 创建新用户
+          user = {
+            id: 'user_' + Date.now(),
+            username: name,
+            email: email,
+            password: null, // Google用户没有密码
+            createdAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            rememberMe: true,
+            googleUser: true
+          };
+          
+          this.users[email] = user;
+          localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
+          
+          // 初始化用户数据
+          const userData = {
+            pockets: [],
+            recentActivity: []
+          };
+          
+          localStorage.setItem(`user_${user.id}_data`, JSON.stringify(userData));
+        } else {
+          // 更新最后登录时间
+          user.lastLogin = new Date().toISOString();
+          this.users[email] = user;
+          localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
+        }
+        
+        // 保存当前用户
+        this.saveCurrentUser(user, true);
       }
+    };
+    
+    // 全局Google登录处理函数
+    window.handleGoogleSignIn = (response) => {
+      AppState.handleGoogleSignIn(response);
     };
     
     // 初始化应用程序
