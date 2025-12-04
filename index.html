@@ -81,6 +81,7 @@
       }
       .gradient-text {
         background: linear-gradient(45deg, #FFD700, #165DFF);
+        background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
@@ -1411,6 +1412,8 @@
     // 应用程序状态管理
     // ============================
     const AppState = {
+      apiBase: 'http://localhost:3000/api',
+      authToken: null,
       // 当前用户信息
       currentUser: null,
       currentAdmin: null,
@@ -1585,22 +1588,17 @@
       
       // 检查自动登录
       checkAutoLogin() {
-        const savedLogin = localStorage.getItem('monkeyPocketCurrentUser');
-        if (savedLogin) {
-          const { userId, expiry } = JSON.parse(savedLogin);
-          
-          // 检查是否过期 (30天)
-          if (new Date().getTime() < expiry) {
-            const userData = this.getUserData(userId);
-            if (userData) {
-              this.currentUser = userData.user;
-              this.showMainContent();
-              this.updateDashboard();
-              this.showPage('dashboard');
-            }
+        const saved = localStorage.getItem('mp_token');
+        if (saved) {
+          const { token, user, expiry } = JSON.parse(saved);
+          if (Date.now() < expiry) {
+            this.authToken = token;
+            this.currentUser = user;
+            this.showMainContent();
+            this.updateDashboard();
+            this.showPage('dashboard');
           } else {
-            // 清除过期的登录信息
-            localStorage.removeItem('monkeyPocketCurrentUser');
+            localStorage.removeItem('mp_token');
           }
         }
       },
@@ -1650,24 +1648,10 @@
       saveCurrentUser(user, rememberMe = false) {
         this.currentUser = user;
         
-        if (rememberMe) {
-          // 设置30天过期
-          const expiry = new Date().getTime() + (30 * 24 * 60 * 60 * 1000);
-          localStorage.setItem('monkeyPocketCurrentUser', JSON.stringify({
-            userId: user.id,
-            expiry
-          }));
-        } else {
-          // 会话存储
-          sessionStorage.setItem('monkeyPocketCurrentUser', JSON.stringify({
-            userId: user.id
-          }));
-        }
-        
         // 更新最后登录时间
-        user.lastLogin = new Date().toISOString();
-        this.users[user.email] = user;
-        localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
+        if (user) {
+          user.lastLogin = new Date().toISOString();
+        }
         
         this.showMainContent();
         this.updateDashboard();
@@ -2403,49 +2387,29 @@
       // 移除物品
       removeItem(itemId, pocketId) {
         if (!this.currentUser) return;
-        
-        const userData = this.getUserData(this.currentUser.id);
-        if (!userData) return;
-        
-        // 在指定的百宝袋中查找并移除物品
-        const pocketIndex = userData.pockets.findIndex(p => p.id === pocketId);
-        if (pocketIndex === -1) return;
-        
-        const pocket = userData.pockets[pocketIndex];
-        const itemIndex = pocket.items.findIndex(item => item.id === itemId);
-        
-        if (itemIndex !== -1) {
-          // 保存物品名称用于消息显示
-          const itemName = pocket.items[itemIndex].name;
-          
-          // 移除物品
-          pocket.items.splice(itemIndex, 1);
-          pocket.usedSlots--;
-          
-          // 保存更新后的数据
-          userData.pockets[pocketIndex] = pocket;
-          this.saveUserData(this.currentUser.id, userData);
-          
-          // 更新UI
-          this.renderItemsList();
-          this.updateStorageStatus();
-          this.updateDashboard();
-          
-          // 添加活动记录
-          this.addActivity(this.currentUser.id, 'remove_item', 
-            this.currentLang === 'en' 
-              ? `Removed item: ${itemName}` 
-              : `移除了物品: ${itemName}`
-          );
-          
-          // 显示成功消息
-          this.showToast(
-            this.currentLang === 'en' 
-              ? 'Item removed successfully!' 
-              : '物品移除成功！',
-            'success'
-          );
-        }
+        fetch(`${this.apiBase}/items/${itemId}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${this.authToken}` } })
+          .then(async r=>{ if(!r.ok) throw new Error('remove_failed'); return r.json() })
+          .then(()=>{
+            const userData = this.getUserData(this.currentUser.id);
+            if (!userData) return;
+            const pocketIndex = userData.pockets.findIndex(p => p.id === pocketId);
+            if (pocketIndex === -1) return;
+            const pocket = userData.pockets[pocketIndex];
+            const itemIndex = pocket.items.findIndex(item => item.id === itemId);
+            if (itemIndex !== -1) {
+              const itemName = pocket.items[itemIndex].name;
+              pocket.items.splice(itemIndex,1);
+              pocket.usedSlots--;
+              userData.pockets[pocketIndex] = pocket;
+              this.saveUserData(this.currentUser.id, userData);
+              this.renderItemsList();
+              this.updateStorageStatus();
+              this.updateDashboard();
+              this.addActivity(this.currentUser.id,'remove_item', this.currentLang==='en'?`Removed item: ${itemName}`:`移除了物品: ${itemName}`);
+              this.showToast(this.currentLang==='en'?'Item removed successfully!':'物品移除成功！','success');
+            }
+          })
+          .catch(()=>{ this.showToast(this.currentLang==='en'?'Failed to remove item':'移除物品失败','error') })
       },
       
       // 更新远程取物百宝袋选择器
@@ -2606,7 +2570,7 @@
         
         selectedItemsForRetrieval.innerHTML = itemsHTML;
         retrieveItemsBtn.disabled = false;
-        retrieveCostCount.textContent = this.selectedItemsForRetrieval.length;
+        retrieveCostCount.textContent = '1';
         
         // 更新连接状态
         connectionStatus.innerHTML = `
@@ -2655,84 +2619,44 @@
         
         // 确认对话框
         const confirmMsg = this.currentLang === 'en' 
-          ? `Retrieving ${this.selectedItemsForRetrieval.length} item(s) will consume ${this.selectedItemsForRetrieval.length} storage slot(s). Continue?`
-          : `取出 ${this.selectedItemsForRetrieval.length} 件物品将消耗 ${this.selectedItemsForRetrieval.length} 个存储格。是否继续？`;
+          ? `Retrieving selected items will consume 1 storage slot. Continue?`
+          : `取出所选物品将消耗 1 个存储格。是否继续？`;
         
         if (!confirm(confirmMsg)) return;
         
-        // 模拟远程取物过程
         const retrieveItemsBtn = document.getElementById('retrieveItemsBtn');
         const retrieveSuccess = document.getElementById('retrieveSuccess');
         const retrieveError = document.getElementById('retrieveError');
-        
         retrieveItemsBtn.disabled = true;
         retrieveItemsBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (this.currentLang === 'en' ? 'Retrieving...' : '正在取出...');
         retrieveSuccess.classList.add('hidden');
         retrieveError.classList.add('hidden');
-        
-        setTimeout(() => {
-          // 模拟成功
-          const successRate = Math.random();
-          
-          if (successRate > 0.2) { // 80% 成功率
-            // 从百宝袋中移除取出的物品
-            this.selectedItemsForRetrieval.forEach(selectedItem => {
+        const retrievedItems = [...this.selectedItemsForRetrieval];
+        const itemIds = retrievedItems.map(i=>i.id);
+        fetch(`${this.apiBase}/retrieve`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${this.authToken}` }, body: JSON.stringify({ pocketId: this.selectedPocketId, itemIds }) })
+          .then(async r=>{ if(!r.ok) throw new Error('retrieve_failed'); return r.json() })
+          .then(()=>{
+            retrievedItems.forEach(selectedItem => {
               const itemIndex = pocket.items.findIndex(item => item.id === selectedItem.id);
-              if (itemIndex !== -1) {
-                pocket.items.splice(itemIndex, 1);
-                pocket.usedSlots--;
-                
-                // 减少存储格总数（每取物一次消耗一个存储格）
-                pocket.storageSlots--;
-              }
+              if (itemIndex !== -1) { pocket.items.splice(itemIndex, 1); pocket.usedSlots--; }
             });
-            
-            // 保存更新后的数据
+            pocket.storageSlots = Math.max(pocket.storageSlots - 1, pocket.usedSlots);
             userData.pockets[pocketIndex] = pocket;
             this.saveUserData(this.currentUser.id, userData);
-            
-            // 清空选择
             this.selectedItemsForRetrieval = [];
-            
-            // 更新UI
             this.updateRetrievalSelection();
             this.renderAvailableItemsList();
             this.updateStorageStatus();
             this.updateDashboard();
-            
-            // 添加取物记录
-            const retrieveHistoryItem = {
-              items: this.selectedItemsForRetrieval.map(item => item.name),
-              timestamp: new Date().toISOString(),
-              slotsConsumed: this.selectedItemsForRetrieval.length
-            };
-            
-            if (!pocket.retrieveHistory) {
-              pocket.retrieveHistory = [];
-            }
-            
+            const retrieveHistoryItem = { items: retrievedItems.map(item => item.name), timestamp: new Date().toISOString(), slotsConsumed: 1 };
+            if (!pocket.retrieveHistory) pocket.retrieveHistory = [];
             pocket.retrieveHistory.push(retrieveHistoryItem);
-            
-            // 添加活动记录
-            this.addActivity(this.currentUser.id, 'retrieve', 
-              this.currentLang === 'en' 
-                ? `Retrieved ${this.selectedItemsForRetrieval.length} item(s) from Monkey Pocket` 
-                : `从百宝袋中取出 ${this.selectedItemsForRetrieval.length} 件物品`
-            );
-            
-            // 显示成功消息
+            this.addActivity(this.currentUser.id, 'retrieve', this.currentLang === 'en' ? `Retrieved ${retrievedItems.length} item(s) from Monkey Pocket` : `从百宝袋中取出 ${retrievedItems.length} 件物品`);
             retrieveSuccess.classList.remove('hidden');
             retrieveError.classList.add('hidden');
-          } else {
-            // 显示错误消息
-            retrieveError.classList.remove('hidden');
-            retrieveSuccess.classList.add('hidden');
-          }
-          
-          // 重置按钮
-          retrieveItemsBtn.disabled = false;
-          retrieveItemsBtn.innerHTML = '<i class="fa fa-download mr-2"></i>' + (this.currentLang === 'en' ? 'Retrieve Items' : '取出物品');
-        }, 2000);
+          })
+          .catch(()=>{ retrieveError.classList.remove('hidden'); retrieveSuccess.classList.add('hidden'); })
+          .finally(()=>{ retrieveItemsBtn.disabled = false; retrieveItemsBtn.innerHTML = '<i class="fa fa-download mr-2"></i>' + (this.currentLang === 'en' ? 'Retrieve Items' : '取出物品') })
       },
       
       // 初始化语言
@@ -3495,52 +3419,56 @@
         const email = document.getElementById('loginEmail').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
         const rememberMe = document.getElementById('rememberMe').checked;
-        
         const loginError = document.getElementById('loginError');
         const loginErrorMsg = document.getElementById('loginErrorMsg');
-        
-        // 简单验证
         if (!email || !password) {
-          loginErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Please enter email and password.' 
-            : '请输入邮箱和密码。';
+          loginErrorMsg.textContent = this.currentLang === 'en' ? 'Please enter email and password.' : '请输入邮箱和密码。';
           loginError.classList.remove('hidden');
           return;
         }
-        
-        // 查找用户
-        const user = this.users[email];
-        if (!user || user.password !== password) {
-          loginErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Incorrect email or password.' 
-            : '邮箱或密码不正确。';
+        fetch(`${this.apiBase}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        }).then(async r => {
+          if (!r.ok) throw new Error('login_failed');
+          return r.json();
+        }).then(data => {
+          this.authToken = data.token;
+          const expiry = Date.now() + (rememberMe ? 30 * 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000);
+          localStorage.setItem('mp_token', JSON.stringify({ token: data.token, user: data.user, expiry }));
+          loginError.classList.add('hidden');
+          this.saveCurrentUser(data.user, rememberMe);
+        }).catch(() => {
+          loginErrorMsg.textContent = this.currentLang === 'en' ? 'Incorrect email or password.' : '邮箱或密码不正确。';
           loginError.classList.remove('hidden');
-          return;
-        }
-        
-        // 登录成功
-        loginError.classList.add('hidden');
-        this.saveCurrentUser(user, rememberMe);
+        })
       },
       
       // 处理管理员登录
       handleAdminLogin() {
         const username = document.getElementById('adminUsername').value.trim();
         const password = document.getElementById('adminPassword').value.trim();
-        
         const adminLoginError = document.getElementById('adminLoginError');
         const adminLoginErrorMsg = document.getElementById('adminLoginErrorMsg');
-        
-        // 验证管理员凭据
-        if (username === this.adminUsername && password === this.adminPassword) {
-          // 登录成功
+        fetch(`${this.apiBase}/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        }).then(async r => {
+          if (!r.ok) throw new Error('admin_login_failed');
+          return r.json();
+        }).then(data => {
+          this.currentAdmin = { username };
+          sessionStorage.setItem('monkeyPocketAdmin', JSON.stringify({ adminUsername: username, expiry: Date.now() + 12 * 60 * 60 * 1000, token: data.token }));
+          this.showAdminContent();
+          this.updateAdminDashboard();
+          this.showAdminPage('adminDashboard');
           adminLoginError.classList.add('hidden');
-          this.saveCurrentAdmin({ username });
-        } else {
-          // 登录失败
+        }).catch(() => {
           adminLoginErrorMsg.textContent = '管理员账号或密码不正确';
           adminLoginError.classList.remove('hidden');
-        }
+        })
       },
       
       // 处理发送邮箱验证码
@@ -3548,67 +3476,25 @@
         const email = document.getElementById('registerEmail').value.trim();
         const sendCodeBtn = document.getElementById('sendVerificationCode');
         const verificationTimer = document.getElementById('verificationTimer');
-        
         if (!email) {
-          this.showToast(
-            this.currentLang === 'en' 
-              ? 'Please enter your email address first.' 
-              : '请先输入您的邮箱地址。',
-            'error'
-          );
+          this.showToast(this.currentLang === 'en' ? 'Please enter your email address first.' : '请先输入您的邮箱地址。','error');
           return;
         }
-        
-        // 检查邮箱是否已注册
-        if (this.users[email]) {
-          this.showToast(
-            this.currentLang === 'en' 
-              ? 'Email already registered.' 
-              : '邮箱已被注册。',
-            'error'
-          );
-          return;
-        }
-        
-        // 生成验证码
-        const verificationCode = this.generateVerificationCode();
-        
-        // 保存验证码到内存（有效5分钟）
-        this.emailVerificationCodes[email] = {
-          code: verificationCode,
-          expiry: Date.now() + 5 * 60 * 1000 // 5分钟
-        };
-        
-        // 禁用发送按钮并开始倒计时
         sendCodeBtn.disabled = true;
         sendCodeBtn.textContent = this.currentLang === 'en' ? 'Resend in 300s' : '300秒后重发';
-        
-        let timeLeft = 300;
-        const timerInterval = setInterval(() => {
-          timeLeft--;
-          verificationTimer.textContent = this.currentLang === 'en' 
-            ? `Code valid for ${timeLeft}s` 
-            : `验证码有效时间: ${timeLeft}秒`;
-          
-          sendCodeBtn.textContent = this.currentLang === 'en' 
-            ? `Resend in ${timeLeft}s` 
-            : `${timeLeft}秒后重发`;
-          
-          if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            sendCodeBtn.disabled = false;
-            sendCodeBtn.textContent = this.currentLang === 'en' ? 'Send Code' : '发送验证码';
-            verificationTimer.textContent = '';
-          }
-        }, 1000);
-        
-        // 显示验证码（实际应用中应通过后端发送邮件）
-        this.showToast(
-          this.currentLang === 'en' 
-            ? `Verification code sent to ${email}: ${verificationCode}` 
-            : `验证码已发送到 ${email}: ${verificationCode}`,
-          'success'
-        );
+        fetch(`${this.apiBase}/auth/send-code`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) })
+          .then(async r=>{ if(!r.ok) throw new Error('send_failed'); return r.json() })
+          .then(()=>{
+            let timeLeft = 300;
+            const timerInterval = setInterval(()=>{
+              timeLeft--;
+              verificationTimer.textContent = this.currentLang === 'en' ? `Code valid for ${timeLeft}s` : `验证码有效时间: ${timeLeft}秒`;
+              sendCodeBtn.textContent = this.currentLang === 'en' ? `Resend in ${timeLeft}s` : `${timeLeft}秒后重发`;
+              if (timeLeft <= 0) { clearInterval(timerInterval); sendCodeBtn.disabled = false; sendCodeBtn.textContent = this.currentLang==='en'?'Send Code':'发送验证码'; verificationTimer.textContent=''; }
+            },1000)
+            this.showToast(this.currentLang==='en'?`Verification code sent to ${email}`:`验证码已发送到 ${email}`,'success')
+          })
+          .catch(()=>{ sendCodeBtn.disabled=false; sendCodeBtn.textContent=this.currentLang==='en'?'Send Code':'发送验证码'; this.showToast(this.currentLang==='en'?'Failed to send code':'发送验证码失败','error') })
       },
       
       // 处理注册
@@ -3619,131 +3505,28 @@
         const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
         const verificationCode = document.getElementById('registerVerificationCode').value.trim();
         const agreeTerms = document.getElementById('agreeTerms').checked;
-        
         const registerError = document.getElementById('registerError');
         const registerErrorMsg = document.getElementById('registerErrorMsg');
         const registerSuccess = document.getElementById('registerSuccess');
-        
-        // 验证输入
         if (!username || !email || !password || !confirmPassword || !verificationCode) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Please fill in all fields.' 
-            : '请填写所有字段。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
+          registerErrorMsg.textContent = this.currentLang==='en'?'Please fill in all fields.':'请填写所有字段。';
+          registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return;
         }
-        
-        if (!agreeTerms) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'You must agree to the terms and conditions.' 
-            : '您必须同意服务条款和隐私政策。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
-        }
-        
-        if (password !== confirmPassword) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Passwords do not match.' 
-            : '密码不匹配。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
-        }
-        
-        if (password.length < 8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Password must be at least 8 characters with letters and numbers.' 
-            : '密码必须至少8个字符，包含字母和数字。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
-        }
-        
-        // 检查邮箱是否已注册
-        if (this.users[email]) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Email already registered.' 
-            : '邮箱已被注册。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
-        }
-        
-        // 验证验证码
-        const savedCode = this.emailVerificationCodes[email];
-        if (!savedCode) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Please request a verification code first.' 
-            : '请先获取验证码。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
-        }
-        
-        if (Date.now() > savedCode.expiry) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Verification code has expired. Please request a new one.' 
-            : '验证码已过期，请重新获取。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
-        }
-        
-        if (savedCode.code !== verificationCode) {
-          registerErrorMsg.textContent = this.currentLang === 'en' 
-            ? 'Invalid verification code.' 
-            : '验证码不正确。';
-          registerError.classList.remove('hidden');
-          registerSuccess.classList.add('hidden');
-          return;
-        }
-        
-        // 创建新用户
-        const newUser = {
-          id: 'user_' + Date.now(),
-          username,
-          email,
-          password, // 实际应用中应加密存储
-          createdAt: new Date().toISOString(),
-          lastLogin: null,
-          rememberMe: false
-        };
-        
-        // 保存用户
-        this.users[email] = newUser;
-        localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
-        
-        // 初始化用户数据
-        const userData = {
-          pockets: [],
-          recentActivity: []
-        };
-        
-        localStorage.setItem(`user_${newUser.id}_data`, JSON.stringify(userData));
-        
-        // 清除验证码
-        delete this.emailVerificationCodes[email];
-        
-        // 显示成功消息
-        registerError.classList.add('hidden');
-        registerSuccess.classList.remove('hidden');
-        
-        // 重置表单
-        document.getElementById('registerFormElement').reset();
-        
-        // 重置验证码按钮
-        const sendCodeBtn = document.getElementById('sendVerificationCode');
-        sendCodeBtn.disabled = false;
-        sendCodeBtn.textContent = this.currentLang === 'en' ? 'Send Code' : '发送验证码';
-        document.getElementById('verificationTimer').textContent = '';
-        
-        // 3秒后切换到登录表单
-        setTimeout(() => {
-          this.showLoginForm();
-          registerSuccess.classList.add('hidden');
-        }, 3000);
+        if (!agreeTerms) { registerErrorMsg.textContent = this.currentLang==='en'?'You must agree to the terms and conditions.':'您必须同意服务条款和隐私政策。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
+        if (password !== confirmPassword) { registerErrorMsg.textContent = this.currentLang==='en'?'Passwords do not match.':'密码不匹配。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
+        if (password.length<8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) { registerErrorMsg.textContent = this.currentLang==='en'?'Password must be at least 8 characters with letters and numbers.':'密码必须至少8个字符，包含字母和数字。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
+        fetch(`${this.apiBase}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username,email,password,verificationCode }) })
+          .then(async r=>{ if(!r.ok) throw new Error('register_failed'); return r.json() })
+          .then(()=>{
+            registerError.classList.add('hidden');
+            registerSuccess.classList.remove('hidden');
+            document.getElementById('registerFormElement').reset();
+            const sendCodeBtn = document.getElementById('sendVerificationCode');
+            sendCodeBtn.disabled = false; sendCodeBtn.textContent = this.currentLang==='en'?'Send Code':'发送验证码';
+            document.getElementById('verificationTimer').textContent = '';
+            setTimeout(()=>{ this.showLoginForm(); registerSuccess.classList.add('hidden'); },3000)
+          })
+          .catch(()=>{ registerErrorMsg.textContent = this.currentLang==='en'?'Registration failed.':'注册失败'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); })
       },
       
       // 处理激活
@@ -3825,38 +3608,31 @@
           return;
         }
         
-        // 模拟激活过程
         const activateDeviceBtn = document.getElementById('activateDeviceBtn');
         activateDeviceBtn.disabled = true;
         activateDeviceBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (this.currentLang === 'en' ? 'Activating...' : '激活中...');
-        
-        setTimeout(() => {
-          // 模拟成功激活
-          activationSuccess.classList.remove('hidden');
-          activationError.classList.add('hidden');
-          
-          // 启用IP绑定表单
-          document.getElementById('ipAddress').disabled = false;
-          document.getElementById('fullName').disabled = false;
-          document.getElementById('hkid').disabled = false;
-          document.getElementById('bindIPBtn').disabled = false;
-          
-          // 保存激活码到临时存储
-          sessionStorage.setItem('pendingActivationCode', activationCode);
-          sessionStorage.setItem('pendingPocketName', pocketName);
-          
-          // 更新百宝袋选择器
-          this.updatePocketSelectors();
-          
-          // 重置按钮
-          activateDeviceBtn.disabled = false;
-          activateDeviceBtn.textContent = this.currentLang === 'en' ? 'Device Activated' : '设备已激活';
-          activateDeviceBtn.classList.add('bg-monkey-green', 'hover:bg-monkey-green/90');
-          activateDeviceBtn.classList.remove('bg-monkey-blue', 'hover:bg-monkey-blue/90');
-          
-          // 自动填充IP地址
-          document.getElementById('ipAddress').value = this.generateRandomIP();
-        }, 1500);
+        fetch(`${this.apiBase}/pockets/activate`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${this.authToken}` }, body: JSON.stringify({ activationCode, activationPassword, pocketName }) })
+          .then(async r=>{ if(!r.ok) throw new Error('activate_failed'); return r.json() })
+          .then(()=>{
+            activationSuccess.classList.remove('hidden'); activationError.classList.add('hidden');
+            document.getElementById('ipAddress').disabled = false;
+            document.getElementById('fullName').disabled = false;
+            document.getElementById('hkid').disabled = false;
+            document.getElementById('bindIPBtn').disabled = false;
+            sessionStorage.setItem('pendingActivationCode', activationCode);
+            sessionStorage.setItem('pendingPocketName', pocketName);
+            this.updatePocketSelectors();
+            activateDeviceBtn.disabled = false;
+            activateDeviceBtn.textContent = this.currentLang === 'en' ? 'Device Activated' : '设备已激活';
+            activateDeviceBtn.classList.add('bg-monkey-green', 'hover:bg-monkey-green/90');
+            activateDeviceBtn.classList.remove('bg-monkey-blue', 'hover:bg-monkey-blue/90');
+            document.getElementById('ipAddress').value = this.generateRandomIP();
+          })
+          .catch(()=>{
+            activationErrorMsg.textContent = this.currentLang==='en'?'Activation failed.':'激活失败';
+            activationError.classList.remove('hidden'); activationSuccess.classList.add('hidden');
+            activateDeviceBtn.disabled=false; activateDeviceBtn.textContent=this.currentLang==='en'?'Activate Device':'激活设备';
+          })
       },
       
       // 自动检测IP地址
@@ -3906,122 +3682,37 @@
           return;
         }
         
-        // 模拟绑定过程
+        // 绑定过程
         const bindIPBtn = document.getElementById('bindIPBtn');
         bindIPBtn.disabled = true;
         bindIPBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (this.currentLang === 'en' ? 'Binding...' : '绑定中...');
-        
-        setTimeout(() => {
-          // 获取激活码和百宝袋名称
-          const activationCode = sessionStorage.getItem('pendingActivationCode');
-          const pocketName = sessionStorage.getItem('pendingPocketName');
-          
-          if (!this.currentUser || !activationCode || !pocketName) {
-            ipBindingErrorMsg.textContent = this.currentLang === 'en'
-              ? "Activation data not found. Please try again."
-              : "未找到激活数据。请重试。";
-            ipBindingError.classList.remove('hidden');
-            ipBindingSuccess.classList.add('hidden');
-            bindIPBtn.disabled = false;
-            bindIPBtn.textContent = this.currentLang === 'en' ? 'Bind IP Address' : '绑定IP地址';
-            return;
-          }
-          
-          const userData = this.getUserData(this.currentUser.id);
-          if (!userData) return;
-          
-          // 检查是否已存在相同激活码的百宝袋
-          const existingPocket = userData.pockets.find(p => p.activationCode === activationCode);
-          if (existingPocket) {
-            ipBindingErrorMsg.textContent = this.currentLang === 'en'
-              ? "This Monkey Pocket has already been activated."
-              : "此百宝袋已被激活。";
-            ipBindingError.classList.remove('hidden');
-            ipBindingSuccess.classList.add('hidden');
-            bindIPBtn.disabled = false;
-            bindIPBtn.textContent = this.currentLang === 'en' ? 'Bind IP Address' : '绑定IP地址';
-            return;
-          }
-          
-          // 创建新的百宝袋
-          const newPocket = {
-            id: 'pocket_' + Date.now(),
-            userId: this.currentUser.id,
-            activationCode,
-            name: pocketName,
-            ipAddress,
-            fullName,
-            hkid,
-            storageSlots: 15, // 初始15个免费存储格
-            usedSlots: 0,
-            purchasedSlots: 0,
-            items: [],
-            purchaseHistory: [],
-            retrieveHistory: [],
-            createdAt: new Date().toISOString()
-          };
-          
-          // 添加到用户数据
-          userData.pockets.push(newPocket);
-          this.saveUserData(this.currentUser.id, userData);
-          
-          // 更新激活码状态
-          if (this.activationCodes[activationCode]) {
-            this.activationCodes[activationCode].used = true;
-            this.activationCodes[activationCode].userId = this.currentUser.id;
-            this.activationCodes[activationCode].pocketId = newPocket.id;
-            this.activationCodes[activationCode].activatedAt = new Date().toISOString();
-            this.saveActivationCodesToStorage();
-          }
-          
-          // 清除临时存储
-          sessionStorage.removeItem('pendingActivationCode');
-          sessionStorage.removeItem('pendingPocketName');
-          
-          // 显示成功消息
-          ipBindingSuccess.classList.remove('hidden');
-          ipBindingError.classList.add('hidden');
-          
-          // 重置按钮
-          bindIPBtn.disabled = false;
-          bindIPBtn.textContent = this.currentLang === 'en' ? 'IP Bound' : 'IP已绑定';
-          bindIPBtn.classList.add('bg-monkey-green', 'hover:bg-monkey-green/90');
-          bindIPBtn.classList.remove('bg-monkey-yellow', 'hover:bg-monkey-yellow/90');
-          
-          // 重置表单
-          document.getElementById('activationCode').value = '';
-          document.getElementById('activationPassword').value = '';
-          document.getElementById('pocketName').value = '';
-          document.getElementById('ipAddress').value = '';
-          document.getElementById('fullName').value = '';
-          document.getElementById('hkid').value = '';
-          
-          // 启用物品管理功能
-          document.getElementById('itemName').disabled = false;
-          document.getElementById('itemCategory').disabled = false;
-          document.getElementById('itemDescription').disabled = false;
-          document.getElementById('addItemBtn').disabled = false;
-          
-          // 更新UI
-          this.updatePocketSelectors();
-          this.renderPocketsList();
-          this.updateDashboard();
-          
-          // 添加活动记录
-          this.addActivity(this.currentUser.id, 'add_pocket', 
-            this.currentLang === 'en' 
-              ? `Added new Monkey Pocket: ${pocketName}` 
-              : `添加了新百宝袋: ${pocketName}`
-          );
-          
-          // 显示成功消息
-          this.showToast(
-            this.currentLang === 'en' 
-              ? 'Monkey Pocket added successfully!' 
-              : '百宝袋添加成功！',
-            'success'
-          );
-        }, 1500);
+        const activationCode = sessionStorage.getItem('pendingActivationCode');
+        const pocketName = sessionStorage.getItem('pendingPocketName');
+        fetch(`${this.apiBase}/pockets/bind-ip`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization':`Bearer ${this.authToken}` }, body: JSON.stringify({ activationCode, pocketName, ipAddress, fullName, hkid }) })
+          .then(async r=>{ if(!r.ok) throw new Error('bind_failed'); return r.json() })
+          .then(()=>{
+            sessionStorage.removeItem('pendingActivationCode');
+            sessionStorage.removeItem('pendingPocketName');
+            ipBindingSuccess.classList.remove('hidden'); ipBindingError.classList.add('hidden');
+            bindIPBtn.disabled=false; bindIPBtn.textContent=this.currentLang==='en'?'IP Bound':'IP已绑定';
+            bindIPBtn.classList.add('bg-monkey-green','hover:bg-monkey-green/90');
+            bindIPBtn.classList.remove('bg-monkey-yellow','hover:bg-monkey-yellow/90');
+            document.getElementById('activationCode').value='';
+            document.getElementById('activationPassword').value='';
+            document.getElementById('pocketName').value='';
+            document.getElementById('ipAddress').value='';
+            document.getElementById('fullName').value='';
+            document.getElementById('hkid').value='';
+            this.updatePocketSelectors();
+            this.renderPocketsList();
+            this.updateDashboard();
+            this.showToast(this.currentLang==='en'?'Monkey Pocket added successfully!':'百宝袋添加成功！','success')
+          })
+          .catch(()=>{
+            ipBindingErrorMsg.textContent = this.currentLang==='en'?'Binding failed.':'绑定失败';
+            ipBindingError.classList.remove('hidden'); ipBindingSuccess.classList.add('hidden');
+            bindIPBtn.disabled=false; bindIPBtn.textContent=this.currentLang==='en'?'Bind IP Address':'绑定IP地址';
+          })
       },
       
       // 处理添加物品
@@ -4045,63 +3736,28 @@
           );
           return;
         }
-        
-        const userData = this.getUserData(this.currentUser.id);
-        if (!userData) return;
-        
-        // 查找目标百宝袋
-        const pocketIndex = userData.pockets.findIndex(p => p.id === targetPocketId);
-        if (pocketIndex === -1) return;
-        
-        const pocket = userData.pockets[pocketIndex];
-        
-        // 检查存储空间
-        if (pocket.usedSlots >= pocket.storageSlots) {
-          storageFullError.classList.remove('hidden');
-          return;
-        }
-        
         storageFullError.classList.add('hidden');
-        
-        // 创建新物品
-        const newItem = {
-          id: 'item_' + Date.now(),
-          name: itemName,
-          category: itemCategory,
-          description: itemDescription || (this.currentLang === 'en' ? 'No description' : '无描述'),
-          addedAt: new Date().toISOString()
-        };
-        
-        // 添加到百宝袋
-        pocket.items.push(newItem);
-        pocket.usedSlots++;
-        
-        // 保存更新后的数据
-        userData.pockets[pocketIndex] = pocket;
-        this.saveUserData(this.currentUser.id, userData);
-        
-        // 重置表单
-        document.getElementById('itemForm').reset();
-        
-        // 更新UI
-        this.renderItemsList();
-        this.updateStorageStatus();
-        this.updateDashboard();
-        
-        // 添加活动记录
-        this.addActivity(this.currentUser.id, 'add_item', 
-          this.currentLang === 'en' 
-            ? `Added new item: ${itemName}` 
-            : `添加了新物品: ${itemName}`
-        );
-        
-        // 显示成功消息
-        this.showToast(
-          this.currentLang === 'en' 
-            ? 'Item added successfully!' 
-            : '物品添加成功！',
-          'success'
-        );
+        const payload = { pocketId: targetPocketId, name: itemName, category: itemCategory, description: itemDescription || (this.currentLang==='en'?'No description':'无描述') };
+        fetch(`${this.apiBase}/items`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${this.authToken}` }, body: JSON.stringify(payload) })
+          .then(async r=>{ if(!r.ok) throw new Error('add_item_failed'); return r.json() })
+          .then(data=>{
+            const userData = this.getUserData(this.currentUser.id);
+            if (!userData) return;
+            const pocketIndex = userData.pockets.findIndex(p => p.id === targetPocketId);
+            if (pocketIndex === -1) return;
+            const pocket = userData.pockets[pocketIndex];
+            pocket.items.push({ id: data.id, name: itemName, category: itemCategory, description: payload.description, addedAt: new Date().toISOString() });
+            pocket.usedSlots++;
+            userData.pockets[pocketIndex] = pocket;
+            this.saveUserData(this.currentUser.id, userData);
+            document.getElementById('itemForm').reset();
+            this.renderItemsList();
+            this.updateStorageStatus();
+            this.updateDashboard();
+            this.addActivity(this.currentUser.id, 'add_item', this.currentLang==='en'?`Added new item: ${itemName}`:`添加了新物品: ${itemName}`);
+            this.showToast(this.currentLang==='en'?'Item added successfully!':'物品添加成功！','success');
+          })
+          .catch(()=>{ this.showToast(this.currentLang==='en'?'Failed to add item':'添加物品失败','error') })
       },
       
       // 处理购买按钮点击
@@ -4222,60 +3878,28 @@
         
         const pocket = userData.pockets[pocketIndex];
         
-        // 模拟购买过程
         const confirmPurchase = document.getElementById('confirmPurchase');
         confirmPurchase.disabled = true;
         confirmPurchase.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (this.currentLang === 'en' ? 'Processing...' : '处理中...');
-        
-        setTimeout(() => {
-          // 增加存储格
-          pocket.storageSlots += planSlots;
-          pocket.purchasedSlots += planSlots;
-          
-          // 添加购买记录
-          if (!pocket.purchaseHistory) {
-            pocket.purchaseHistory = [];
-          }
-          
-          pocket.purchaseHistory.push({
-            slots: planSlots,
-            price: planPrice,
-            date: new Date().toISOString(),
-            planName: planSlots === 5 ? (this.currentLang === 'en' ? 'Basic Plan' : '基础套餐') : 
-                     planSlots === 13 ? (this.currentLang === 'en' ? 'Advanced Plan' : '进阶套餐') : 
-                     (this.currentLang === 'en' ? 'Premium Plan' : '高级套餐')
-          });
-          
-          // 保存更新后的数据
-          userData.pockets[pocketIndex] = pocket;
-          this.saveUserData(this.currentUser.id, userData);
-          
-          // 关闭模态框
-          this.closePurchaseModal();
-          
-          // 重置按钮
-          confirmPurchase.disabled = false;
-          confirmPurchase.innerHTML = this.currentLang === 'en' ? 'Confirm Purchase' : '确认购买';
-          
-          // 更新UI
-          this.updateStorageStatus();
-          this.updateDashboard();
-          
-          // 添加活动记录
-          this.addActivity(this.currentUser.id, 'purchase', 
-            this.currentLang === 'en' 
-              ? `Purchased ${planSlots} storage slots for ${pocket.name}` 
-              : `为 ${pocket.name} 购买了 ${planSlots} 个存储格`
-          );
-          
-          // 显示成功消息
-          this.showToast(
-            this.currentLang === 'en' 
-              ? 'Purchase successful! Storage slots have been added to your pocket.' 
-              : '购买成功！存储格已添加到您的百宝袋。',
-            'success'
-          );
-        }, 2000);
+        const planName = planSlots === 5 ? (this.currentLang==='en'?'Basic Plan':'基础套餐') : planSlots === 13 ? (this.currentLang==='en'?'Advanced Plan':'进阶套餐') : (this.currentLang==='en'?'Premium Plan':'高级套餐');
+        fetch(`${this.apiBase}/storage/purchase`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${this.authToken}` }, body: JSON.stringify({ pocketId, slots: planSlots, price: planPrice, planName }) })
+          .then(async r=>{ if(!r.ok) throw new Error('purchase_failed'); return r.json() })
+          .then(()=>{
+            pocket.storageSlots += planSlots;
+            pocket.purchasedSlots = (pocket.purchasedSlots||0) + planSlots;
+            if (!pocket.purchaseHistory) pocket.purchaseHistory = [];
+            pocket.purchaseHistory.push({ slots: planSlots, price: planPrice, date: new Date().toISOString(), planName });
+            userData.pockets[pocketIndex] = pocket;
+            this.saveUserData(this.currentUser.id, userData);
+            this.closePurchaseModal();
+            confirmPurchase.disabled=false;
+            confirmPurchase.innerHTML = this.currentLang==='en'?'Confirm Purchase':'确认购买';
+            this.updateStorageStatus();
+            this.updateDashboard();
+            this.addActivity(this.currentUser.id,'purchase', this.currentLang==='en'?`Purchased ${planSlots} storage slots for ${pocket.name}`:`为 ${pocket.name} 购买了 ${planSlots} 个存储格`);
+            this.showToast(this.currentLang==='en'?'Purchase successful! Storage slots have been added to your pocket.':'购买成功！存储格已添加到您的百宝袋。','success')
+          })
+          .catch(()=>{ confirmPurchase.disabled=false; confirmPurchase.innerHTML = this.currentLang==='en'?'Confirm Purchase':'确认购买'; this.showToast(this.currentLang==='en'?'Purchase failed. Please try again.':'购买失败，请重试。','error') })
       },
       
       // 处理生成激活码
@@ -4284,52 +3908,14 @@
         const passwordLength = parseInt(document.getElementById('passwordLength').value);
         const complexity = document.querySelector('input[name="complexity"]:checked').value;
         const expiryDate = document.getElementById('expiryDate').value;
-        
-        if (codeCount < 1 || codeCount > 100) {
-          this.showToast('生成数量必须在1到100之间', 'error');
-          return;
-        }
-        
-        if (passwordLength < 6 || passwordLength > 20) {
-          this.showToast('密码长度必须在6到20之间', 'error');
-          return;
-        }
-        
-        // 生成激活码
-        const generatedCodes = [];
-        
-        for (let i = 0; i < codeCount; i++) {
-          const code = this.generateActivationCode();
-          const password = this.generatePassword(passwordLength, complexity);
-          
-          // 检查激活码是否已存在
-          if (!this.activationCodes[code]) {
-            const codeData = {
-              password: password,
-              used: false,
-              userId: null,
-              pocketId: null,
-              generatedAt: new Date().toISOString(),
-              expiresAt: expiryDate || null,
-              generatedBy: this.currentAdmin ? this.currentAdmin.username : 'system'
-            };
-            
-            this.activationCodes[code] = codeData;
-            generatedCodes.push({ code, password, status: '未使用' });
-          } else {
-            // 如果激活码已存在，重新生成
-            i--;
-          }
-        }
-        
-        // 保存激活码到本地存储
-        this.saveActivationCodesToStorage();
-        
-        // 显示生成的激活码
-        this.displayGeneratedCodes(generatedCodes);
-        
-        // 显示成功消息
-        this.showToast(`成功生成 ${codeCount} 个激活码`, 'success');
+        if (codeCount < 1 || codeCount > 100) { this.showToast('生成数量必须在1到100之间', 'error'); return; }
+        if (passwordLength < 6 || passwordLength > 20) { this.showToast('密码长度必须在6到20之间', 'error'); return; }
+        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
+        const token = adminSession.token;
+        fetch(`${this.apiBase}/codes/generate`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ count: codeCount, passwordLength, complexity, expiryDate }) })
+          .then(async r=>{ if(!r.ok) throw new Error('gen_failed'); return r.json() })
+          .then(data=>{ this.displayGeneratedCodes(data.codes || []); this.showToast(`成功生成 ${codeCount} 个激活码`, 'success'); })
+          .catch(()=>{ this.showToast('生成激活码失败', 'error') })
       },
       
       // 显示生成的激活码
@@ -4379,50 +3965,30 @@
       renderAdminUsersList() {
         const usersList = document.getElementById('usersList');
         const noUsersMessage = document.getElementById('noUsersMessage');
-        
         if (!usersList) return;
-        
-        // 清空列表
         usersList.innerHTML = '';
-        
-        const users = Object.values(this.users);
-        
-        if (users.length === 0) {
-          noUsersMessage.classList.remove('hidden');
-          return;
-        }
-        
-        noUsersMessage.classList.add('hidden');
-        
-        // 渲染用户列表
-        users.forEach(user => {
-          const userData = this.getUserData(user.id);
-          const pocketCount = userData ? userData.pockets.length : 0;
-          
-          const row = document.createElement('tr');
-          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
-          row.innerHTML = `
-            <td class="py-3 px-4">${user.username}</td>
-            <td class="py-3 px-4">${user.email}</td>
-            <td class="py-3 px-4">${new Date(user.createdAt).toLocaleDateString()}</td>
-            <td class="py-3 px-4">${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : '从未登录'}</td>
-            <td class="py-3 px-4">${pocketCount}</td>
-            <td class="py-3 px-4">
-              <button class="text-monkey-blue hover:text-monkey-blue/80 text-sm view-user-pockets" data-userid="${user.id}">
-                <i class="fa fa-eye mr-1"></i> 查看百宝袋
-              </button>
-            </td>
-          `;
-          usersList.appendChild(row);
-        });
-        
-        // 添加查看百宝袋按钮事件监听
-        document.querySelectorAll('.view-user-pockets').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const userId = btn.getAttribute('data-userid');
-            this.viewUserPockets(userId);
-          });
-        });
+        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
+        const token = adminSession.token;
+        fetch(`${this.apiBase}/admin/users`, { headers:{ 'Authorization': `Bearer ${token}` } })
+          .then(async r=>{ if(!r.ok) throw new Error('users_failed'); return r.json() })
+          .then(({users})=>{
+            if (!users || users.length===0) { noUsersMessage.classList.remove('hidden'); return }
+            noUsersMessage.classList.add('hidden');
+            users.forEach(user=>{
+              const row = document.createElement('tr');
+              row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+              row.innerHTML = `
+                <td class="py-3 px-4">${user.username}</td>
+                <td class="py-3 px-4">${user.email}</td>
+                <td class="py-3 px-4">${new Date(user.created_at).toLocaleDateString()}</td>
+                <td class="py-3 px-4">${user.last_login ? new Date(user.last_login).toLocaleDateString() : '从未登录'}</td>
+                <td class="py-3 px-4">-</td>
+                <td class="py-3 px-4"></td>
+              `;
+              usersList.appendChild(row);
+            })
+          })
+          .catch(()=>{ noUsersMessage.classList.remove('hidden') })
       },
       
       // 查看用户百宝袋
@@ -4498,64 +4064,32 @@
       renderAdminPocketsList() {
         const pocketsList = document.getElementById('pocketsListAdmin');
         const noPocketsAdminMessage = document.getElementById('noPocketsAdminMessage');
-        
         if (!pocketsList) return;
-        
-        // 清空列表
         pocketsList.innerHTML = '';
-        
-        // 收集所有百宝袋
-        let allPockets = [];
-        
-        Object.values(this.users).forEach(user => {
-          const userData = this.getUserData(user.id);
-          if (userData && userData.pockets.length > 0) {
-            userData.pockets.forEach(pocket => {
-              allPockets.push({
-                ...pocket,
-                username: user.username,
-                userEmail: user.email
-              });
-            });
-          }
-        });
-        
-        if (allPockets.length === 0) {
-          noPocketsAdminMessage.classList.remove('hidden');
-          return;
-        }
-        
-        noPocketsAdminMessage.classList.add('hidden');
-        
-        // 渲染百宝袋列表
-        allPockets.forEach(pocket => {
-          const row = document.createElement('tr');
-          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
-          row.innerHTML = `
-            <td class="py-3 px-4">${pocket.activationCode}</td>
-            <td class="py-3 px-4">${pocket.name}</td>
-            <td class="py-3 px-4">${pocket.username} (${pocket.userEmail})</td>
-            <td class="py-3 px-4">${pocket.ipAddress || '未绑定'}</td>
-            <td class="py-3 px-4">${pocket.usedSlots}/${pocket.storageSlots}</td>
-            <td class="py-3 px-4">${pocket.items.length}</td>
-            <td class="py-3 px-4">${new Date(pocket.createdAt).toLocaleDateString()}</td>
-            <td class="py-3 px-4">
-              <button class="text-monkey-blue hover:text-monkey-blue/80 text-sm view-pocket-items" data-pocketid="${pocket.id}" data-userid="${pocket.userId}">
-                <i class="fa fa-box mr-1"></i> 查看物品
-              </button>
-            </td>
-          `;
-          pocketsList.appendChild(row);
-        });
-        
-        // 添加查看物品按钮事件监听
-        document.querySelectorAll('.view-pocket-items').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const pocketId = btn.getAttribute('data-pocketid');
-            const userId = btn.getAttribute('data-userid');
-            this.viewPocketItems(pocketId, userId);
-          });
-        });
+        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
+        const token = adminSession.token;
+        fetch(`${this.apiBase}/admin/pockets`, { headers:{ 'Authorization': `Bearer ${token}` } })
+          .then(async r=>{ if(!r.ok) throw new Error('pockets_failed'); return r.json() })
+          .then(({pockets})=>{
+            if (!pockets || pockets.length===0) { noPocketsAdminMessage.classList.remove('hidden'); return }
+            noPocketsAdminMessage.classList.add('hidden');
+            pockets.forEach(pocket=>{
+              const row = document.createElement('tr');
+              row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+              row.innerHTML = `
+                <td class="py-3 px-4">${pocket.activation_code}</td>
+                <td class="py-3 px-4">${pocket.name}</td>
+                <td class="py-3 px-4">${pocket.username} (${pocket.userEmail})</td>
+                <td class="py-3 px-4">${pocket.ip_address || '未绑定'}</td>
+                <td class="py-3 px-4">${pocket.used_slots}/${pocket.storage_slots}</td>
+                <td class="py-3 px-4">-</td>
+                <td class="py-3 px-4">${new Date(pocket.created_at).toLocaleDateString()}</td>
+                <td class="py-3 px-4"></td>
+              `;
+              pocketsList.appendChild(row);
+            })
+          })
+          .catch(()=>{ noPocketsAdminMessage.classList.remove('hidden') })
       },
       
       // 查看百宝袋物品
@@ -4636,86 +4170,46 @@
       renderAdminCodesList() {
         const codesList = document.getElementById('codesList');
         const noCodesMessage = document.getElementById('noCodesMessage');
-        
         if (!codesList) return;
-        
-        // 清空列表
         codesList.innerHTML = '';
-        
-        const codes = Object.entries(this.activationCodes);
-        
-        if (codes.length === 0) {
-          noCodesMessage.classList.remove('hidden');
-          return;
-        }
-        
-        noCodesMessage.classList.add('hidden');
-        
-        // 渲染激活码列表
-        codes.forEach(([code, data]) => {
-          // 获取使用者信息
-          let userName = '未使用';
-          if (data.userId) {
-            const user = Object.values(this.users).find(u => u.id === data.userId);
-            if (user) {
-              userName = user.username;
-            }
-          }
-          
-          // 确定状态
-          let status = '未使用';
-          let statusColor = 'bg-green-500/20 text-green-400';
-          
-          if (data.used) {
-            status = '已使用';
-            statusColor = 'bg-blue-500/20 text-blue-400';
-          }
-          
-          if (data.expiresAt && new Date(data.expiresAt) < new Date()) {
-            status = '已过期';
-            statusColor = 'bg-red-500/20 text-red-400';
-          }
-          
-          const row = document.createElement('tr');
-          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
-          row.innerHTML = `
-            <td class="py-3 px-4 font-mono">${code}</td>
-            <td class="py-3 px-4 font-mono">${data.password}</td>
-            <td class="py-3 px-4">
-              <span class="px-2 py-1 rounded-full text-xs ${statusColor}">${status}</span>
-            </td>
-            <td class="py-3 px-4">${userName}</td>
-            <td class="py-3 px-4">${new Date(data.generatedAt).toLocaleDateString()}</td>
-            <td class="py-3 px-4">${data.expiresAt ? new Date(data.expiresAt).toLocaleDateString() : '永久有效'}</td>
-            <td class="py-3 px-4">
-              <button class="text-monkey-red hover:text-monkey-red/80 text-sm delete-code" data-code="${code}">
-                <i class="fa fa-trash mr-1"></i> 删除
-              </button>
-            </td>
-          `;
-          codesList.appendChild(row);
-        });
-        
-        // 添加删除激活码按钮事件监听
-        document.querySelectorAll('.delete-code').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const code = btn.getAttribute('data-code');
-            this.deleteActivationCode(code);
-          });
-        });
+        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
+        const token = adminSession.token;
+        fetch(`${this.apiBase}/codes`, { headers:{ 'Authorization': `Bearer ${token}` } })
+          .then(async r=>{ if(!r.ok) throw new Error('codes_failed'); return r.json() })
+          .then(({codes})=>{
+            if (!codes || codes.length===0) { noCodesMessage.classList.remove('hidden'); return }
+            noCodesMessage.classList.add('hidden');
+            codes.forEach(c=>{
+              let status = c.used ? '已使用' : '未使用';
+              let statusColor = c.used ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400';
+              if (c.expires_at && new Date(c.expires_at) < new Date()) { status='已过期'; statusColor='bg-red-500/20 text-red-400' }
+              const row = document.createElement('tr');
+              row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+              row.innerHTML = `
+                <td class="py-3 px-4 font-mono">${c.code}</td>
+                <td class="py-3 px-4 font-mono">${c.password}</td>
+                <td class="py-3 px-4"><span class="px-2 py-1 rounded-full text-xs ${statusColor}">${status}</span></td>
+                <td class="py-3 px-4">${c.user_id || '未使用'}</td>
+                <td class="py-3 px-4">${new Date(c.generated_at).toLocaleDateString()}</td>
+                <td class="py-3 px-4">${c.expires_at ? new Date(c.expires_at).toLocaleDateString() : '永久有效'}</td>
+                <td class="py-3 px-4"><button class="text-monkey-red hover:text-monkey-red/80 text-sm delete-code" data-code="${c.code}"><i class="fa fa-trash mr-1"></i> 删除</button></td>
+              `;
+              codesList.appendChild(row);
+            })
+            document.querySelectorAll('.delete-code').forEach(btn=>{ btn.addEventListener('click',()=>{ const code = btn.getAttribute('data-code'); this.deleteActivationCode(code) }) })
+          })
+          .catch(()=>{ noCodesMessage.classList.remove('hidden') })
       },
       
       // 删除激活码
       deleteActivationCode(code) {
         if (!confirm(`确定要删除激活码 ${code} 吗？`)) return;
-        
-        if (this.activationCodes[code]) {
-          delete this.activationCodes[code];
-          this.saveActivationCodesToStorage();
-          this.renderAdminCodesList();
-          this.updateAdminDashboard();
-          this.showToast('激活码删除成功', 'success');
-        }
+        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
+        const token = adminSession.token;
+        fetch(`${this.apiBase}/codes/${code}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${token}` } })
+          .then(async r=>{ if(!r.ok) throw new Error('delete_failed'); return r.json() })
+          .then(()=>{ this.renderAdminCodesList(); this.updateAdminDashboard(); this.showToast('激活码删除成功', 'success') })
+          .catch(()=>{ this.showToast('删除失败', 'error') })
       },
       
       // 搜索用户
