@@ -8,8 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Google登录 -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <!-- 配置Tailwind -->
   <script>
     tailwind.config = {
@@ -99,8 +97,8 @@
   <!-- 语言切换 -->
   <div class="fixed top-4 right-20 z-50">
     <div class="flex space-x-2 bg-monkey-gray/80 backdrop-blur-md rounded-full p-1 border border-monkey-gray/50">
-      <button id="langEN" class="lang-btn px-3 py-1 rounded-full text-sm font-medium bg-monkey-blue text-white transition-all">EN</button>
-      <button id="langZH" class="lang-btn px-3 py-1 rounded-full text-sm font-medium text-gray-300 hover:text-white transition-all">中文</button>
+      <button id="langEN" class="lang-btn px-3 py-1 rounded-full text-sm font-medium text-gray-300 hover:text-white transition-all">EN</button>
+      <button id="langZH" class="lang-btn px-3 py-1 rounded-full text-sm font-medium bg-monkey-blue text-white transition-all">中文</button>
     </div>
   </div>
 
@@ -247,26 +245,6 @@
             </button>
           </form>
           
-          <!-- Google登录按钮 -->
-          <div class="mt-6">
-            <div id="g_id_onload"
-                data-client_id="YOUR_GOOGLE_CLIENT_ID"
-                data-context="signin"
-                data-ux_mode="popup"
-                data-callback="handleGoogleSignIn"
-                data-auto_prompt="false">
-            </div>
-            <div class="g_id_signin w-full"
-                data-type="standard"
-                data-shape="rectangular"
-                data-theme="filled_black"
-                data-text="signin_with"
-                data-size="large"
-                data-logo_alignment="left"
-                data-width="100%">
-            </div>
-          </div>
-          
           <div class="text-center mt-6">
             <button id="showAdminLogin" class="text-sm text-monkey-orange hover:text-monkey-orange/80 transition-colors">
               <i class="fa fa-lock mr-1"></i> <span data-i18n="adminLoginLink">管理员登录</span>
@@ -310,6 +288,16 @@
               <input type="password" id="registerConfirmPassword" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="••••••••" required>
             </div>
             
+            <!-- 邮箱验证码 -->
+            <div>
+              <label for="registerVerificationCode" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="authVerificationCodeLabel">邮箱验证码</label>
+              <div class="flex space-x-2">
+                <input type="text" id="registerVerificationCode" class="flex-1 bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="6位验证码" maxlength="6" required>
+                <button type="button" id="sendVerificationCode" class="bg-monkey-blue hover:bg-monkey-blue/90 text-white font-medium px-4 py-3 rounded-lg transition-colors whitespace-nowrap" data-i18n="authSendCodeButton">发送验证码</button>
+              </div>
+              <p class="text-xs text-gray-500 mt-1" id="verificationTimer"></p>
+            </div>
+            
             <div class="flex items-center">
               <input type="checkbox" id="agreeTerms" class="w-4 h-4 text-monkey-blue bg-monkey-gray border-monkey-gray rounded focus:ring-monkey-blue focus:ring-2" required>
               <label for="agreeTerms" class="ml-2 text-sm text-gray-300" data-i18n="authAgreeTerms">我同意 <a href="#" class="text-monkey-blue hover:underline">服务条款</a> 和 <a href="#" class="text-monkey-blue hover:underline">隐私政策</a></label>
@@ -319,19 +307,6 @@
               <span data-i18n="authRegisterButton">注册</span>
             </button>
           </form>
-          
-          <!-- Google注册按钮 -->
-          <div class="mt-6">
-            <div class="g_id_signin w-full"
-                data-type="standard"
-                data-shape="rectangular"
-                data-theme="filled_black"
-                data-text="signup_with"
-                data-size="large"
-                data-logo_alignment="left"
-                data-width="100%">
-            </div>
-          </div>
           
           <div id="registerError" class="hidden bg-monkey-red/20 border border-monkey-red/50 rounded-lg p-4 mt-6">
             <div class="flex items-start">
@@ -656,7 +631,7 @@
           <div class="mt-6 flex flex-wrap justify-center gap-4">
             <div class="inline-flex items-center bg-monkey-gray/50 rounded-full px-4 py-2">
               <i class="fa fa-box text-monkey-yellow mr-2"></i>
-              <span class="text-sm" data-i18n="storageStatus">已使用 <span id="usedSlots">0</span>/<span id="totalSlots">15</span> 存储格</span>
+              <span class="text-sm" data-i18n="storageStatus">已使用 <span id="usedSlots">0</span>/<span id="totalSlots">0</span> 存储格</span>
             </div>
             
             <div id="pocketSelectorContainer" class="hidden">
@@ -1458,6 +1433,9 @@
       // 活动页面
       activePage: 'dashboard',
       
+      // 邮箱验证码相关
+      emailVerificationCodes: {},
+      
       // 管理员设置
       adminUsername: 'MonkeyKingdomCEO',
       adminPassword: 'zzx070502ZZX070502',
@@ -1598,6 +1576,11 @@
         }
         
         return password;
+      },
+      
+      // 生成6位邮箱验证码
+      generateVerificationCode() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
       },
       
       // 检查自动登录
@@ -2814,6 +2797,8 @@
             authUsernameLabel: "Username",
             authPasswordHint: "Password must be at least 8 characters with letters and numbers",
             authConfirmPasswordLabel: "Confirm Password",
+            authVerificationCodeLabel: "Email Verification Code",
+            authSendCodeButton: "Send Code",
             authAgreeTerms: "I agree to the <a href='#' class='text-monkey-blue hover:underline'>Terms of Service</a> and <a href='#' class='text-monkey-blue hover:underline'>Privacy Policy</a>",
             authRegisterButton: "Register",
             authLoginErrorTitle: "Login Failed",
@@ -2878,7 +2863,7 @@
             // 物品管理
             itemsTitle: "Manage Your <span class='text-monkey-yellow'>Items</span>",
             itemsDescription: "Add, organize and manage your personal items",
-            storageStatus: "Used <span id='usedSlots'>0</span>/<span id='totalSlots'>15</span> storage slots",
+            storageStatus: "Used <span id='usedSlots'>0</span>/<span id='totalSlots'>0</span> storage slots",
             addItemTitle: "Add New Item",
             itemNameLabel: "Item Name",
             itemNamePlaceholder: "e.g. Laptop, Umbrella",
@@ -2984,6 +2969,9 @@
             purchaseFailedText: "Purchase failed. Please try again.",
             confirmRetrieveText: "Are you sure you want to retrieve the selected items?",
             retrievingText: "Retrieving...",
+            verificationCodeSent: "Verification code sent to your email. Valid for 5 minutes.",
+            verificationCodeExpired: "Verification code expired. Please request a new one.",
+            verificationCodeInvalid: "Invalid verification code.",
           },
           zh: {
             // 用户菜单
@@ -3015,6 +3003,8 @@
             authUsernameLabel: "用户名",
             authPasswordHint: "密码至少8个字符，包含字母和数字",
             authConfirmPasswordLabel: "确认密码",
+            authVerificationCodeLabel: "邮箱验证码",
+            authSendCodeButton: "发送验证码",
             authAgreeTerms: "我同意 <a href='#' class='text-monkey-blue hover:underline'>服务条款</a> 和 <a href='#' class='text-monkey-blue hover:underline'>隐私政策</a>",
             authRegisterButton: "注册",
             authLoginErrorTitle: "登录失败",
@@ -3078,7 +3068,7 @@
             // 物品管理
             itemsTitle: "管理你的<span class='text-monkey-yellow'>物品</span>",
             itemsDescription: "添加、组织和管理您的个人物品",
-            storageStatus: "已使用 <span id='usedSlots'>0</span>/<span id='totalSlots'>15</span> 存储格",
+            storageStatus: "已使用 <span id='usedSlots'>0</span>/<span id='totalSlots'>0</span> 存储格",
             addItemTitle: "添加新物品",
             itemNameLabel: "物品名称",
             itemNamePlaceholder: "例如: 笔记本电脑、雨伞",
@@ -3184,6 +3174,9 @@
             purchaseFailedText: "购买失败，请重试。",
             confirmRetrieveText: "确定要取出选中的物品吗？",
             retrievingText: "正在取出...",
+            verificationCodeSent: "验证码已发送到您的邮箱，5分钟内有效。",
+            verificationCodeExpired: "验证码已过期，请重新获取。",
+            verificationCodeInvalid: "验证码不正确。",
           }
         };
         
@@ -3404,6 +3397,9 @@
           this.handleAdminLogin();
         });
         
+        // 发送邮箱验证码
+        document.getElementById('sendVerificationCode').addEventListener('click', () => this.handleSendVerificationCode());
+        
         // 激活设备
         document.getElementById('activateDeviceBtn').addEventListener('click', () => this.handleActivation());
         
@@ -3547,12 +3543,81 @@
         }
       },
       
+      // 处理发送邮箱验证码
+      handleSendVerificationCode() {
+        const email = document.getElementById('registerEmail').value.trim();
+        const sendCodeBtn = document.getElementById('sendVerificationCode');
+        const verificationTimer = document.getElementById('verificationTimer');
+        
+        if (!email) {
+          this.showToast(
+            this.currentLang === 'en' 
+              ? 'Please enter your email address first.' 
+              : '请先输入您的邮箱地址。',
+            'error'
+          );
+          return;
+        }
+        
+        // 检查邮箱是否已注册
+        if (this.users[email]) {
+          this.showToast(
+            this.currentLang === 'en' 
+              ? 'Email already registered.' 
+              : '邮箱已被注册。',
+            'error'
+          );
+          return;
+        }
+        
+        // 生成验证码
+        const verificationCode = this.generateVerificationCode();
+        
+        // 保存验证码到内存（有效5分钟）
+        this.emailVerificationCodes[email] = {
+          code: verificationCode,
+          expiry: Date.now() + 5 * 60 * 1000 // 5分钟
+        };
+        
+        // 禁用发送按钮并开始倒计时
+        sendCodeBtn.disabled = true;
+        sendCodeBtn.textContent = this.currentLang === 'en' ? 'Resend in 300s' : '300秒后重发';
+        
+        let timeLeft = 300;
+        const timerInterval = setInterval(() => {
+          timeLeft--;
+          verificationTimer.textContent = this.currentLang === 'en' 
+            ? `Code valid for ${timeLeft}s` 
+            : `验证码有效时间: ${timeLeft}秒`;
+          
+          sendCodeBtn.textContent = this.currentLang === 'en' 
+            ? `Resend in ${timeLeft}s` 
+            : `${timeLeft}秒后重发`;
+          
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            sendCodeBtn.disabled = false;
+            sendCodeBtn.textContent = this.currentLang === 'en' ? 'Send Code' : '发送验证码';
+            verificationTimer.textContent = '';
+          }
+        }, 1000);
+        
+        // 显示验证码（实际应用中应通过后端发送邮件）
+        this.showToast(
+          this.currentLang === 'en' 
+            ? `Verification code sent to ${email}: ${verificationCode}` 
+            : `验证码已发送到 ${email}: ${verificationCode}`,
+          'success'
+        );
+      },
+      
       // 处理注册
       handleRegister() {
         const username = document.getElementById('registerUsername').value.trim();
         const email = document.getElementById('registerEmail').value.trim();
         const password = document.getElementById('registerPassword').value.trim();
         const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
+        const verificationCode = document.getElementById('registerVerificationCode').value.trim();
         const agreeTerms = document.getElementById('agreeTerms').checked;
         
         const registerError = document.getElementById('registerError');
@@ -3560,7 +3625,7 @@
         const registerSuccess = document.getElementById('registerSuccess');
         
         // 验证输入
-        if (!username || !email || !password || !confirmPassword) {
+        if (!username || !email || !password || !confirmPassword || !verificationCode) {
           registerErrorMsg.textContent = this.currentLang === 'en' 
             ? 'Please fill in all fields.' 
             : '请填写所有字段。';
@@ -3606,6 +3671,35 @@
           return;
         }
         
+        // 验证验证码
+        const savedCode = this.emailVerificationCodes[email];
+        if (!savedCode) {
+          registerErrorMsg.textContent = this.currentLang === 'en' 
+            ? 'Please request a verification code first.' 
+            : '请先获取验证码。';
+          registerError.classList.remove('hidden');
+          registerSuccess.classList.add('hidden');
+          return;
+        }
+        
+        if (Date.now() > savedCode.expiry) {
+          registerErrorMsg.textContent = this.currentLang === 'en' 
+            ? 'Verification code has expired. Please request a new one.' 
+            : '验证码已过期，请重新获取。';
+          registerError.classList.remove('hidden');
+          registerSuccess.classList.add('hidden');
+          return;
+        }
+        
+        if (savedCode.code !== verificationCode) {
+          registerErrorMsg.textContent = this.currentLang === 'en' 
+            ? 'Invalid verification code.' 
+            : '验证码不正确。';
+          registerError.classList.remove('hidden');
+          registerSuccess.classList.add('hidden');
+          return;
+        }
+        
         // 创建新用户
         const newUser = {
           id: 'user_' + Date.now(),
@@ -3629,12 +3723,21 @@
         
         localStorage.setItem(`user_${newUser.id}_data`, JSON.stringify(userData));
         
+        // 清除验证码
+        delete this.emailVerificationCodes[email];
+        
         // 显示成功消息
         registerError.classList.add('hidden');
         registerSuccess.classList.remove('hidden');
         
         // 重置表单
         document.getElementById('registerFormElement').reset();
+        
+        // 重置验证码按钮
+        const sendCodeBtn = document.getElementById('sendVerificationCode');
+        sendCodeBtn.disabled = false;
+        sendCodeBtn.textContent = this.currentLang === 'en' ? 'Send Code' : '发送验证码';
+        document.getElementById('verificationTimer').textContent = '';
         
         // 3秒后切换到登录表单
         setTimeout(() => {
@@ -3745,14 +3848,6 @@
           // 更新百宝袋选择器
           this.updatePocketSelectors();
           
-          // 显示成功消息
-          this.showToast(
-            this.currentLang === 'en' 
-              ? 'Activation successful! Please complete IP binding.' 
-              : '激活成功！请完成IP绑定。',
-            'success'
-          );
-          
           // 重置按钮
           activateDeviceBtn.disabled = false;
           activateDeviceBtn.textContent = this.currentLang === 'en' ? 'Device Activated' : '设备已激活';
@@ -3834,6 +3929,19 @@
           
           const userData = this.getUserData(this.currentUser.id);
           if (!userData) return;
+          
+          // 检查是否已存在相同激活码的百宝袋
+          const existingPocket = userData.pockets.find(p => p.activationCode === activationCode);
+          if (existingPocket) {
+            ipBindingErrorMsg.textContent = this.currentLang === 'en'
+              ? "This Monkey Pocket has already been activated."
+              : "此百宝袋已被激活。";
+            ipBindingError.classList.remove('hidden');
+            ipBindingSuccess.classList.add('hidden');
+            bindIPBtn.disabled = false;
+            bindIPBtn.textContent = this.currentLang === 'en' ? 'Bind IP Address' : '绑定IP地址';
+            return;
+          }
           
           // 创建新的百宝袋
           const newPocket = {
@@ -4711,57 +4819,7 @@
         } else {
           noCodesMessage.classList.remove('hidden');
         }
-      },
-      
-      // Google登录处理
-      handleGoogleSignIn(response) {
-        // 解码JWT令牌
-        const payload = JSON.parse(atob(response.credential.split('.')[1]));
-        
-        // 创建或更新用户
-        const email = payload.email;
-        const name = payload.name;
-        
-        let user = this.users[email];
-        
-        if (!user) {
-          // 创建新用户
-          user = {
-            id: 'user_' + Date.now(),
-            username: name,
-            email: email,
-            password: null, // Google用户没有密码
-            createdAt: new Date().toISOString(),
-            lastLogin: new Date().toISOString(),
-            rememberMe: true,
-            googleUser: true
-          };
-          
-          this.users[email] = user;
-          localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
-          
-          // 初始化用户数据
-          const userData = {
-            pockets: [],
-            recentActivity: []
-          };
-          
-          localStorage.setItem(`user_${user.id}_data`, JSON.stringify(userData));
-        } else {
-          // 更新最后登录时间
-          user.lastLogin = new Date().toISOString();
-          this.users[email] = user;
-          localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
-        }
-        
-        // 保存当前用户
-        this.saveCurrentUser(user, true);
       }
-    };
-    
-    // 全局Google登录处理函数
-    window.handleGoogleSignIn = (response) => {
-      AppState.handleGoogleSignIn(response);
     };
     
     // 初始化应用程序
