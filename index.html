@@ -557,7 +557,6 @@
                   <p class="text-xs text-gray-500 mt-1" data-i18n="hkidHint">格式: 1个字母 + 6位数字 + 括号内1位校验码</p>
                 </div>
                 
-                <div id="activePocketSelector" class="hidden">
 
                   <select id="selectPocketForBinding" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors">
                   </select>
@@ -3710,8 +3709,6 @@
           document.getElementById('hkid').disabled = false;
           document.getElementById('bindIPBtn').disabled = false;
           
-          // 显示百宝袋选择器
-          document.getElementById('activePocketSelector').classList.remove('hidden');
           
           // 保存激活码到临时存储
           sessionStorage.setItem('pendingActivationCode', activationCode);
