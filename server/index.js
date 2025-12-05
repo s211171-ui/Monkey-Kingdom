@@ -41,11 +41,7 @@ async function initDb() {
       created_at TEXT NOT NULL,
       last_login TEXT
     );
-    CREATE TABLE IF NOT EXISTS email_verification (
-      email TEXT PRIMARY KEY,
-      code TEXT NOT NULL,
-      expiry BIGINT NOT NULL
-    );
+    
     CREATE TABLE IF NOT EXISTS activation_codes (
       code TEXT PRIMARY KEY,
       password TEXT NOT NULL,
@@ -119,42 +115,16 @@ function transporter(){
   })
 }
 
-app.post('/api/auth/send-code', async (req,res)=>{
-  const { email } = req.body
-  if(!email) return res.status(400).json({error:'email_required'})
-  const code = String(Math.floor(100000 + Math.random()*900000))
-  const expiry = Date.now() + 5*60*1000
-  await db.run('INSERT INTO email_verification(email,code,expiry) VALUES(?,?,?) ON CONFLICT(email) DO UPDATE SET code=EXCLUDED.code, expiry=EXCLUDED.expiry',[email,code,expiry])
-  const from = process.env.FROM_EMAIL || 'no-reply@monkeypocket.local'
-  try {
-    let t
-    if (process.env.SMTP_USER) {
-      t = transporter()
-    } else {
-      const testAccount = await nodemailer.createTestAccount()
-      t = nodemailer.createTransport({ host: 'smtp.ethereal.email', port: 587, secure: false, auth: { user: testAccount.user, pass: testAccount.pass } })
-    }
-    const info = await t.sendMail({ from, to: email, subject: 'Monkey Pocket 驗證碼', text: `您的驗證碼是 ${code}，有效期 300 秒。`, html: `<p>您的驗證碼是 <b>${code}</b>，有效期 300 秒。</p>` })
-    const previewUrl = nodemailer.getTestMessageUrl(info)
-    res.json({ ok: true, previewUrl })
-  } catch(e){
-    res.status(500).json({ error:'send_failed', detail: String(e) })
-  }
-})
+// 移除验证码发送逻辑：邮箱注册不再需要验证码
 
 app.post('/api/auth/register', async (req,res)=>{
-  const { username,email,password,verificationCode } = req.body
-  if(!username||!email||!password||!verificationCode) return res.status(400).json({error:'missing_fields'})
-  const row = await db.get('SELECT code,expiry FROM email_verification WHERE email=?',[email])
-  if(!row) return res.status(400).json({error:'code_missing'})
-  if(Date.now()>row.expiry) return res.status(400).json({error:'code_expired'})
-  if(row.code!==verificationCode) return res.status(400).json({error:'code_invalid'})
+  const { username,email,password } = req.body
+  if(!username||!email||!password) return res.status(400).json({error:'missing_fields'})
   const existing = await db.get('SELECT id FROM users WHERE email=?',[email])
   if(existing) return res.status(400).json({error:'email_exists'})
   const id = uid('user')
   const hash = bcrypt.hashSync(password,10)
   await db.run('INSERT INTO users(id,username,email,password_hash,created_at) VALUES(?,?,?,?,?)',[id,username,email,hash,new Date().toISOString()])
-  await db.run('DELETE FROM email_verification WHERE email=?',[email])
   res.json({ ok:true })
 })
 

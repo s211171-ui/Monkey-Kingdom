@@ -289,15 +289,7 @@
               <input type="password" id="registerConfirmPassword" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="••••••••" required>
             </div>
             
-            <!-- 邮箱验证码 -->
-            <div>
-              <label for="registerVerificationCode" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="authVerificationCodeLabel">邮箱验证码</label>
-              <div class="flex space-x-2">
-                <input type="text" id="registerVerificationCode" class="flex-1 bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="6位验证码" maxlength="6" required>
-                <button type="button" id="sendVerificationCode" class="bg-monkey-blue hover:bg-monkey-blue/90 text-white font-medium px-4 py-3 rounded-lg transition-colors whitespace-nowrap" data-i18n="authSendCodeButton">发送验证码</button>
-              </div>
-              <p class="text-xs text-gray-500 mt-1" id="verificationTimer"></p>
-            </div>
+            
             
             <div class="flex items-center">
               <input type="checkbox" id="agreeTerms" class="w-4 h-4 text-monkey-blue bg-monkey-gray border-monkey-gray rounded focus:ring-monkey-blue focus:ring-2" required>
@@ -1436,8 +1428,7 @@
       // 活动页面
       activePage: 'dashboard',
       
-      // 邮箱验证码相关
-      emailVerificationCodes: {},
+      
       
       // 管理员设置
       adminUsername: 'MonkeyKingdomCEO',
@@ -3324,8 +3315,7 @@
           this.handleAdminLogin();
         });
         
-        // 发送邮箱验证码
-        document.getElementById('sendVerificationCode').addEventListener('click', () => this.handleSendVerificationCode());
+        
         
         // 激活设备
         document.getElementById('activateDeviceBtn').addEventListener('click', () => this.handleActivation());
@@ -3474,35 +3464,7 @@
         })
       },
       
-      // 处理发送邮箱验证码
-      handleSendVerificationCode() {
-        const email = document.getElementById('registerEmail').value.trim();
-        const sendCodeBtn = document.getElementById('sendVerificationCode');
-        const verificationTimer = document.getElementById('verificationTimer');
-        if (!email) {
-          this.showToast(this.currentLang === 'en' ? 'Please enter your email address first.' : '请先输入您的邮箱地址。','error');
-          return;
-        }
-        sendCodeBtn.disabled = true;
-        sendCodeBtn.textContent = this.currentLang === 'en' ? 'Resend in 300s' : '300秒后重发';
-        fetch(`${this.apiBase}/auth/send-code`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) })
-          .then(async r=>{ if(!r.ok) throw new Error('send_failed'); return r.json() })
-          .then((data)=>{
-            let timeLeft = 300;
-            const timerInterval = setInterval(()=>{
-              timeLeft--;
-              verificationTimer.textContent = this.currentLang === 'en' ? `Code valid for ${timeLeft}s` : `验证码有效时间: ${timeLeft}秒`;
-              sendCodeBtn.textContent = this.currentLang === 'en' ? `Resend in ${timeLeft}s` : `${timeLeft}秒后重发`;
-              if (timeLeft <= 0) { clearInterval(timerInterval); sendCodeBtn.disabled = false; sendCodeBtn.textContent = this.currentLang==='en'?'Send Code':'发送验证码'; verificationTimer.textContent=''; }
-            },1000)
-            if (data && data.previewUrl) {
-              this.showToast(this.currentLang==='en'?`Verification code sent (preview): ${data.previewUrl}`:`验证码已发送（预览链接）：${data.previewUrl}`,'success')
-            } else {
-              this.showToast(this.currentLang==='en'?`Verification code sent to ${email}`:`验证码已发送到 ${email}`,'success')
-            }
-          })
-          .catch(()=>{ sendCodeBtn.disabled=false; sendCodeBtn.textContent=this.currentLang==='en'?'Send Code':'发送验证码'; this.showToast(this.currentLang==='en'?'Failed to send code':'发送验证码失败','error') })
-      },
+      
       
       // 处理注册
       handleRegister() {
@@ -3510,27 +3472,24 @@
         const email = document.getElementById('registerEmail').value.trim();
         const password = document.getElementById('registerPassword').value.trim();
         const confirmPassword = document.getElementById('registerConfirmPassword').value.trim();
-        const verificationCode = document.getElementById('registerVerificationCode').value.trim();
+        
         const agreeTerms = document.getElementById('agreeTerms').checked;
         const registerError = document.getElementById('registerError');
         const registerErrorMsg = document.getElementById('registerErrorMsg');
         const registerSuccess = document.getElementById('registerSuccess');
-        if (!username || !email || !password || !confirmPassword || !verificationCode) {
+        if (!username || !email || !password || !confirmPassword) {
           registerErrorMsg.textContent = this.currentLang==='en'?'Please fill in all fields.':'请填写所有字段。';
           registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return;
         }
         if (!agreeTerms) { registerErrorMsg.textContent = this.currentLang==='en'?'You must agree to the terms and conditions.':'您必须同意服务条款和隐私政策。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
         if (password !== confirmPassword) { registerErrorMsg.textContent = this.currentLang==='en'?'Passwords do not match.':'密码不匹配。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
         if (password.length<8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) { registerErrorMsg.textContent = this.currentLang==='en'?'Password must be at least 8 characters with letters and numbers.':'密码必须至少8个字符，包含字母和数字。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
-        fetch(`${this.apiBase}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username,email,password,verificationCode }) })
+        fetch(`${this.apiBase}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username,email,password }) })
           .then(async r=>{ if(!r.ok) throw new Error('register_failed'); return r.json() })
           .then(()=>{
             registerError.classList.add('hidden');
             registerSuccess.classList.remove('hidden');
             document.getElementById('registerFormElement').reset();
-            const sendCodeBtn = document.getElementById('sendVerificationCode');
-            sendCodeBtn.disabled = false; sendCodeBtn.textContent = this.currentLang==='en'?'Send Code':'发送验证码';
-            document.getElementById('verificationTimer').textContent = '';
             setTimeout(()=>{ this.showLoginForm(); registerSuccess.classList.add('hidden'); },3000)
           })
           .catch(()=>{ registerErrorMsg.textContent = this.currentLang==='en'?'Registration failed.':'注册失败'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); })
