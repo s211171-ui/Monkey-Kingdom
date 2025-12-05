@@ -1412,17 +1412,7 @@
     // 应用程序状态管理
     // ============================
     const AppState = {
-      apiBase: (function(){
-        try {
-          const saved = localStorage.getItem('mp_api_base');
-          if (saved) return saved;
-        } catch(e) {}
-        const origin = window.location.origin;
-        if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-          return 'http://localhost:3000/api';
-        }
-        return '/api';
-      })(),
+      apiBase: 'https://monkey-pocket-server.fly.dev/api',
       authToken: null,
       // 当前用户信息
       currentUser: null,

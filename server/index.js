@@ -2,8 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import nodemailer from 'nodemailer'
-import sqlite3 from 'sqlite3'
-import { open } from 'sqlite'
+import { Pool } from 'pg'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import path from 'path'
@@ -22,9 +21,18 @@ const DATA_DIR = process.env.DATA_DIR || __dirname
 
 let db
 async function initDb() {
-  db = await open({ filename: path.join(DATA_DIR, 'data.db'), driver: sqlite3.Database })
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+  const toPg = (sql) => {
+    let i = 0
+    return sql.replace(/\?/g, () => { i++; return `$${i}` })
+  }
+  db = {
+    exec: async (sql) => { await pool.query(sql) },
+    run: async (sql, params=[]) => { await pool.query(toPg(sql), params) },
+    get: async (sql, params=[]) => { const r = await pool.query(toPg(sql), params); return r.rows[0] },
+    all: async (sql, params=[]) => { const r = await pool.query(toPg(sql), params); return r.rows }
+  }
   await db.exec(`
-    PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       username TEXT NOT NULL,
@@ -36,7 +44,7 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS email_verification (
       email TEXT PRIMARY KEY,
       code TEXT NOT NULL,
-      expiry INTEGER NOT NULL
+      expiry BIGINT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS activation_codes (
       code TEXT PRIMARY KEY,
@@ -116,7 +124,7 @@ app.post('/api/auth/send-code', async (req,res)=>{
   if(!email) return res.status(400).json({error:'email_required'})
   const code = String(Math.floor(100000 + Math.random()*900000))
   const expiry = Date.now() + 5*60*1000
-  await db.run('INSERT OR REPLACE INTO email_verification(email,code,expiry) VALUES(?,?,?)',[email,code,expiry])
+  await db.run('INSERT INTO email_verification(email,code,expiry) VALUES(?,?,?) ON CONFLICT(email) DO UPDATE SET code=EXCLUDED.code, expiry=EXCLUDED.expiry',[email,code,expiry])
   const from = process.env.FROM_EMAIL || 'no-reply@monkeypocket.local'
   try {
     let t
