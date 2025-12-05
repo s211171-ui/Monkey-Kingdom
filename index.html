@@ -3873,12 +3873,25 @@
         const expiryDate = document.getElementById('expiryDate').value;
         if (codeCount < 1 || codeCount > 100) { this.showToast('生成数量必须在1到100之间', 'error'); return; }
         if (passwordLength < 6 || passwordLength > 20) { this.showToast('密码长度必须在6到20之间', 'error'); return; }
-        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
-        const token = adminSession.token;
-        fetch(`${this.apiBase}/codes/generate`, { method:'POST', headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ count: codeCount, passwordLength, complexity, expiryDate }) })
-          .then(async r=>{ if(!r.ok) throw new Error('gen_failed'); return r.json() })
-          .then(data=>{ this.displayGeneratedCodes(data.codes || []); this.showToast(`成功生成 ${codeCount} 个激活码`, 'success'); })
-          .catch(()=>{ this.showToast('生成激活码失败', 'error') })
+        const newCodes = [];
+        for (let i=0;i<codeCount;i++){
+          let code;
+          do { code = this.generateActivationCode() } while (this.activationCodes[code]);
+          const pass = this.generatePassword(passwordLength, complexity);
+          this.activationCodes[code] = {
+            password: pass,
+            used: false,
+            userId: null,
+            pocketId: null,
+            generatedAt: new Date().toISOString(),
+            expiresAt: expiryDate || null
+          };
+          newCodes.push({ code, password: pass, status: '未使用' });
+        }
+        this.saveActivationCodesToStorage();
+        this.displayGeneratedCodes(newCodes);
+        this.updateAdminDashboard();
+        this.showToast(`成功生成 ${codeCount} 个激活码`, 'success');
       },
       
       // 显示生成的激活码
@@ -3930,28 +3943,25 @@
         const noUsersMessage = document.getElementById('noUsersMessage');
         if (!usersList) return;
         usersList.innerHTML = '';
-        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
-        const token = adminSession.token;
-        fetch(`${this.apiBase}/admin/users`, { headers:{ 'Authorization': `Bearer ${token}` } })
-          .then(async r=>{ if(!r.ok) throw new Error('users_failed'); return r.json() })
-          .then(({users})=>{
-            if (!users || users.length===0) { noUsersMessage.classList.remove('hidden'); return }
-            noUsersMessage.classList.add('hidden');
-            users.forEach(user=>{
-              const row = document.createElement('tr');
-              row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
-              row.innerHTML = `
-                <td class="py-3 px-4">${user.username}</td>
-                <td class="py-3 px-4">${user.email}</td>
-                <td class="py-3 px-4">${new Date(user.created_at).toLocaleDateString()}</td>
-                <td class="py-3 px-4">${user.last_login ? new Date(user.last_login).toLocaleDateString() : '从未登录'}</td>
-                <td class="py-3 px-4">-</td>
-                <td class="py-3 px-4"></td>
-              `;
-              usersList.appendChild(row);
-            })
-          })
-          .catch(()=>{ noUsersMessage.classList.remove('hidden') })
+        const users = Object.values(this.users);
+        if (users.length === 0) { noUsersMessage.classList.remove('hidden'); return }
+        noUsersMessage.classList.add('hidden');
+        users.forEach(user=>{
+          const row = document.createElement('tr');
+          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+          row.innerHTML = `
+            <td class="py-3 px-4">${user.username}</td>
+            <td class="py-3 px-4">${user.email}</td>
+            <td class="py-3 px-4">${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td class="py-3 px-4">${user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : '从未登录'}</td>
+            <td class="py-3 px-4"><button class="text-monkey-blue text-sm" data-user="${user.id}">查看百宝袋</button></td>
+            <td class="py-3 px-4"></td>
+          `;
+          usersList.appendChild(row);
+        });
+        usersList.querySelectorAll('button[data-user]').forEach(btn=>{
+          btn.addEventListener('click',()=>{ this.viewUserPockets(btn.getAttribute('data-user')) })
+        })
       },
       
       // 查看用户百宝袋
@@ -4029,30 +4039,47 @@
         const noPocketsAdminMessage = document.getElementById('noPocketsAdminMessage');
         if (!pocketsList) return;
         pocketsList.innerHTML = '';
-        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
-        const token = adminSession.token;
-        fetch(`${this.apiBase}/admin/pockets`, { headers:{ 'Authorization': `Bearer ${token}` } })
-          .then(async r=>{ if(!r.ok) throw new Error('pockets_failed'); return r.json() })
-          .then(({pockets})=>{
-            if (!pockets || pockets.length===0) { noPocketsAdminMessage.classList.remove('hidden'); return }
-            noPocketsAdminMessage.classList.add('hidden');
-            pockets.forEach(pocket=>{
-              const row = document.createElement('tr');
-              row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
-              row.innerHTML = `
-                <td class="py-3 px-4">${pocket.activation_code}</td>
-                <td class="py-3 px-4">${pocket.name}</td>
-                <td class="py-3 px-4">${pocket.username} (${pocket.userEmail})</td>
-                <td class="py-3 px-4">${pocket.ip_address || '未绑定'}</td>
-                <td class="py-3 px-4">${pocket.used_slots}/${pocket.storage_slots}</td>
-                <td class="py-3 px-4">-</td>
-                <td class="py-3 px-4">${new Date(pocket.created_at).toLocaleDateString()}</td>
-                <td class="py-3 px-4"></td>
-              `;
-              pocketsList.appendChild(row);
+        const allPockets = [];
+        Object.values(this.users).forEach(user=>{
+          const data = this.getUserData(user.id);
+          if (data) {
+            data.pockets.forEach(p=>{
+              allPockets.push({
+                activationCode: p.activationCode,
+                name: p.name,
+                username: user.username,
+                userEmail: user.email,
+                ipAddress: p.ipAddress,
+                usedSlots: p.usedSlots,
+                storageSlots: p.storageSlots,
+                createdAt: p.createdAt,
+                id: p.id,
+                userId: user.id,
+                itemsCount: (p.items||[]).length
+              })
             })
-          })
-          .catch(()=>{ noPocketsAdminMessage.classList.remove('hidden') })
+          }
+        })
+        if (allPockets.length===0) { noPocketsAdminMessage.classList.remove('hidden'); return }
+        noPocketsAdminMessage.classList.add('hidden');
+        allPockets.forEach(pocket=>{
+          const row = document.createElement('tr');
+          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+          row.innerHTML = `
+            <td class="py-3 px-4">${pocket.activationCode}</td>
+            <td class="py-3 px-4">${pocket.name}</td>
+            <td class="py-3 px-4">${pocket.username} (${pocket.userEmail})</td>
+            <td class="py-3 px-4">${pocket.ipAddress || '未绑定'}</td>
+            <td class="py-3 px-4">${pocket.usedSlots}/${pocket.storageSlots}</td>
+            <td class="py-3 px-4"><button class="text-monkey-blue text-sm" data-pid="${pocket.id}" data-uid="${pocket.userId}">查看物品</button></td>
+            <td class="py-3 px-4">${new Date(pocket.createdAt).toLocaleDateString()}</td>
+            <td class="py-3 px-4"></td>
+          `;
+          pocketsList.appendChild(row);
+        })
+        pocketsList.querySelectorAll('button[data-pid]').forEach(btn=>{
+          btn.addEventListener('click',()=>{ this.viewPocketItems(btn.getAttribute('data-pid'), btn.getAttribute('data-uid')) })
+        })
       },
       
       // 查看百宝袋物品
@@ -4135,44 +4162,33 @@
         const noCodesMessage = document.getElementById('noCodesMessage');
         if (!codesList) return;
         codesList.innerHTML = '';
-        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
-        const token = adminSession.token;
-        fetch(`${this.apiBase}/codes`, { headers:{ 'Authorization': `Bearer ${token}` } })
-          .then(async r=>{ if(!r.ok) throw new Error('codes_failed'); return r.json() })
-          .then(({codes})=>{
-            if (!codes || codes.length===0) { noCodesMessage.classList.remove('hidden'); return }
-            noCodesMessage.classList.add('hidden');
-            codes.forEach(c=>{
-              let status = c.used ? '已使用' : '未使用';
-              let statusColor = c.used ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400';
-              if (c.expires_at && new Date(c.expires_at) < new Date()) { status='已过期'; statusColor='bg-red-500/20 text-red-400' }
-              const row = document.createElement('tr');
-              row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
-              row.innerHTML = `
-                <td class="py-3 px-4 font-mono">${c.code}</td>
-                <td class="py-3 px-4 font-mono">${c.password}</td>
-                <td class="py-3 px-4"><span class="px-2 py-1 rounded-full text-xs ${statusColor}">${status}</span></td>
-                <td class="py-3 px-4">${c.user_id || '未使用'}</td>
-                <td class="py-3 px-4">${new Date(c.generated_at).toLocaleDateString()}</td>
-                <td class="py-3 px-4">${c.expires_at ? new Date(c.expires_at).toLocaleDateString() : '永久有效'}</td>
-                <td class="py-3 px-4"><button class="text-monkey-red hover:text-monkey-red/80 text-sm delete-code" data-code="${c.code}"><i class="fa fa-trash mr-1"></i> 删除</button></td>
-              `;
-              codesList.appendChild(row);
-            })
-            document.querySelectorAll('.delete-code').forEach(btn=>{ btn.addEventListener('click',()=>{ const code = btn.getAttribute('data-code'); this.deleteActivationCode(code) }) })
-          })
-          .catch(()=>{ noCodesMessage.classList.remove('hidden') })
+        const entries = Object.entries(this.activationCodes);
+        if (entries.length===0){ noCodesMessage.classList.remove('hidden'); return }
+        noCodesMessage.classList.add('hidden');
+        entries.forEach(([code, c])=>{
+          let status = c.used ? '已使用' : '未使用';
+          let statusColor = c.used ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400';
+          if (c.expiresAt && new Date(c.expiresAt) < new Date()) { status='已过期'; statusColor='bg-red-500/20 text-red-400' }
+          const row = document.createElement('tr');
+          row.className = 'border-b border-monkey-gray/30 hover:bg-monkey-gray/30';
+          row.innerHTML = `
+            <td class="py-3 px-4 font-mono">${code}</td>
+            <td class="py-3 px-4 font-mono">${c.password}</td>
+            <td class="py-3 px-4"><span class="px-2 py-1 rounded-full text-xs ${statusColor}">${status}</span></td>
+            <td class="py-3 px-4">${c.userId || '未使用'}</td>
+            <td class="py-3 px-4">${new Date(c.generatedAt).toLocaleDateString()}</td>
+            <td class="py-3 px-4">${c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '永久有效'}</td>
+            <td class="py-3 px-4"><button class="text-monkey-red hover:text-monkey-red/80 text-sm delete-code" data-code="${code}"><i class="fa fa-trash mr-1"></i> 删除</button></td>
+          `;
+          codesList.appendChild(row);
+        })
+        document.querySelectorAll('.delete-code').forEach(btn=>{ btn.addEventListener('click',()=>{ const code = btn.getAttribute('data-code'); this.deleteActivationCode(code) }) })
       },
       
       // 删除激活码
       deleteActivationCode(code) {
         if (!confirm(`确定要删除激活码 ${code} 吗？`)) return;
-        const adminSession = JSON.parse(sessionStorage.getItem('monkeyPocketAdmin')||'{}');
-        const token = adminSession.token;
-        fetch(`${this.apiBase}/codes/${code}`, { method:'DELETE', headers:{ 'Authorization': `Bearer ${token}` } })
-          .then(async r=>{ if(!r.ok) throw new Error('delete_failed'); return r.json() })
-          .then(()=>{ this.renderAdminCodesList(); this.updateAdminDashboard(); this.showToast('激活码删除成功', 'success') })
-          .catch(()=>{ this.showToast('删除失败', 'error') })
+        if (this.activationCodes[code]) { delete this.activationCodes[code]; this.saveActivationCodesToStorage(); this.renderAdminCodesList(); this.updateAdminDashboard(); this.showToast('激活码删除成功', 'success') }
       },
       
       // 搜索用户
