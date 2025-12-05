@@ -1,296 +1,202 @@
-import 'dotenv/config'
 import express from 'express'
+import session from 'express-session'
+import SQLiteStoreFactory from 'connect-sqlite3'
 import cors from 'cors'
+import bcrypt from 'bcrypt'
 import nodemailer from 'nodemailer'
-import { Pool } from 'pg'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import { randomUUID } from 'uuid'
+import db from './db.js'
 
+const SQLiteStore = SQLiteStoreFactory(session)
 const app = express()
 app.use(express.json())
-app.use(cors({ origin: true, credentials: true }))
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
+app.use(session({
+  store: new SQLiteStore({ db: 'sessions.db', dir: './server' }),
+  secret: 'monkey-pocket-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }
+}))
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-const PORT = process.env.PORT || 3000
-const JWT_SECRET = process.env.JWT_SECRET || 'insecure'
-const DATA_DIR = process.env.DATA_DIR || __dirname
-
-let db
-async function initDb() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL })
-  const toPg = (sql) => {
-    let i = 0
-    return sql.replace(/\?/g, () => { i++; return `$${i}` })
-  }
-  db = {
-    exec: async (sql) => { await pool.query(sql) },
-    run: async (sql, params=[]) => { await pool.query(toPg(sql), params) },
-    get: async (sql, params=[]) => { const r = await pool.query(toPg(sql), params); return r.rows[0] },
-    all: async (sql, params=[]) => { const r = await pool.query(toPg(sql), params); return r.rows }
-  }
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      username TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at TEXT NOT NULL,
-      last_login TEXT
-    );
-    
-    CREATE TABLE IF NOT EXISTS activation_codes (
-      code TEXT PRIMARY KEY,
-      password TEXT NOT NULL,
-      used INTEGER NOT NULL DEFAULT 0,
-      user_id TEXT,
-      pocket_id TEXT,
-      generated_at TEXT NOT NULL,
-      expires_at TEXT,
-      generated_by TEXT
-    );
-    CREATE TABLE IF NOT EXISTS pockets (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      activation_code TEXT NOT NULL,
-      name TEXT NOT NULL,
-      ip_address TEXT,
-      full_name TEXT,
-      hkid TEXT,
-      storage_slots INTEGER NOT NULL,
-      used_slots INTEGER NOT NULL,
-      created_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS items (
-      id TEXT PRIMARY KEY,
-      pocket_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      category TEXT,
-      description TEXT,
-      added_at TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS purchases (
-      id TEXT PRIMARY KEY,
-      pocket_id TEXT NOT NULL,
-      slots INTEGER NOT NULL,
-      price INTEGER NOT NULL,
-      plan_name TEXT,
-      date TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS activities (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      type TEXT NOT NULL,
-      description TEXT NOT NULL,
-      timestamp TEXT NOT NULL
-    );
-  `)
+function requireUser(req, res, next) {
+  if (!req.session.userId) return res.status(401).json({ error: 'unauthorized' })
+  next()
 }
 
-function uid(prefix='id') { return `${prefix}_${Date.now()}_${Math.floor(Math.random()*1e6)}` }
-
-function authMiddleware(req,res,next){
-  const h = req.headers['authorization']
-  if(!h) return res.status(401).json({error:'unauthorized'})
-  const token = h.replace('Bearer ','')
-  try { const p = jwt.verify(token, JWT_SECRET); req.user = p; next() } catch(e){ return res.status(401).json({error:'invalid_token'}) }
+function requireAdmin(req, res, next) {
+  if (!req.session.adminId) return res.status(401).json({ error: 'unauthorized' })
+  next()
 }
 
-function adminAuth(req,res,next){
-  const h = req.headers['authorization']
-  if(!h) return res.status(401).json({error:'unauthorized'})
-  const token = h.replace('Bearer ','')
-  try { const p = jwt.verify(token, JWT_SECRET); if(p.role!=='admin') throw new Error('not_admin'); req.admin = p; next() } catch(e){ return res.status(401).json({error:'invalid_token'}) }
+function validateHKID(hkid) {
+  const re = /^[A-Z]{1,2}[0-9]{6}\([0-9A]\)$/
+  return re.test(hkid)
 }
 
-function transporter(){
+async function makeTransport() {
+  const testAccount = await nodemailer.createTestAccount()
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT||'587',10),
-    secure: process.env.SMTP_SECURE==='true',
-    auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined
+    host: 'smtp.ethereal.email',
+    port: 587,
+    auth: { user: testAccount.user, pass: testAccount.pass }
   })
 }
 
-// 移除验证码发送逻辑：邮箱注册不再需要验证码
-
-app.post('/api/auth/register', async (req,res)=>{
-  const { username,email,password } = req.body
-  if(!username||!email||!password) return res.status(400).json({error:'missing_fields'})
-  const existing = await db.get('SELECT id FROM users WHERE email=?',[email])
-  if(existing) return res.status(400).json({error:'email_exists'})
-  const id = uid('user')
-  const hash = bcrypt.hashSync(password,10)
-  await db.run('INSERT INTO users(id,username,email,password_hash,created_at) VALUES(?,?,?,?,?)',[id,username,email,hash,new Date().toISOString()])
-  res.json({ ok:true })
+app.post('/api/auth/register', async (req, res) => {
+  const { username, password, email } = req.body
+  if (!username || !password || !email) return res.status(400).json({ error: 'missing' })
+  const exists = db.prepare('SELECT id FROM users WHERE username=? OR email=?').get(username, email)
+  if (exists) return res.status(400).json({ error: 'exists' })
+  const id = randomUUID()
+  const hash = await bcrypt.hash(password, 10)
+  db.prepare('INSERT INTO users (id, username, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)').run(id, username, email, hash, Date.now())
+  const code = String(Math.floor(100000 + Math.random() * 900000))
+  const verId = randomUUID()
+  const expires = Date.now() + 300000
+  db.prepare('INSERT INTO email_verifications (id, user_id, email, code, expires_at) VALUES (?, ?, ?, ?, ?)').run(verId, id, email, code, expires)
+  try {
+    const transporter = await makeTransport()
+    await transporter.sendMail({ from: 'no-reply@monkey-pocket', to: email, subject: 'Verification Code', text: code })
+    const previewUrl = nodemailer.getTestMessageUrl({ messageId: 'preview', response: code })
+  } catch {}
+  res.json({ ok: true, userId: id })
 })
 
-app.post('/api/auth/login', async (req,res)=>{
-  const { email,password } = req.body
-  const user = await db.get('SELECT * FROM users WHERE email=?',[email])
-  if(!user) return res.status(400).json({error:'invalid_credentials'})
-  const ok = bcrypt.compareSync(password,user.password_hash)
-  if(!ok) return res.status(400).json({error:'invalid_credentials'})
-  await db.run('UPDATE users SET last_login=? WHERE id=?',[new Date().toISOString(), user.id])
-  const token = jwt.sign({ sub:user.id, role:'user' }, JWT_SECRET, { expiresIn: '30d' })
-  res.json({ token, user:{ id:user.id, username:user.username, email:user.email } })
+app.post('/api/auth/verify-email', (req, res) => {
+  const { email, code } = req.body
+  const ver = db.prepare('SELECT * FROM email_verifications WHERE email=? AND code=? AND consumed=0').get(email, code)
+  if (!ver) return res.status(400).json({ error: 'invalid' })
+  if (Date.now() > ver.expires_at) return res.status(400).json({ error: 'expired' })
+  db.prepare('UPDATE users SET verified_email=1 WHERE id=?').run(ver.user_id)
+  db.prepare('UPDATE email_verifications SET consumed=1 WHERE id=?').run(ver.id)
+  res.json({ ok: true })
 })
 
-app.post('/api/admin/login', (req,res)=>{
-  const { username,password } = req.body
-  if(username===process.env.ADMIN_USERNAME && password===process.env.ADMIN_PASSWORD){
-    const token = jwt.sign({ sub:'admin', role:'admin' }, JWT_SECRET, { expiresIn:'12h' })
-    return res.json({ token })
-  }
-  res.status(400).json({error:'invalid_admin_credentials'})
+app.post('/api/auth/login', async (req, res) => {
+  const { username, email, password } = req.body
+  let user
+  if (email) user = db.prepare('SELECT * FROM users WHERE email=?').get(email)
+  else user = db.prepare('SELECT * FROM users WHERE username=?').get(username)
+  if (!user) return res.status(400).json({ error: 'invalid' })
+  const ok = await bcrypt.compare(password, user.password_hash)
+  if (!ok) return res.status(400).json({ error: 'invalid' })
+  req.session.userId = user.id
+  res.json({ ok: true })
 })
 
-app.get('/api/health', (req,res)=>{ res.json({ ok:true, time:new Date().toISOString() }) })
-
-app.post('/api/codes/generate', adminAuth, async (req,res)=>{
-  const { count=1, passwordLength=8, complexity='medium', expiryDate } = req.body
-  const genPass = () => {
-    let chars='0123456789';
-    if(complexity==='medium') chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-    if(complexity==='strong') chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>?'
-    let p=''; for(let i=0;i<passwordLength;i++){ p+=chars.charAt(Math.floor(Math.random()*chars.length)) } return p
-  }
-  const genCode = () => {
-    const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let s='MK-';
-    for(let i=0;i<12;i++){ if(i>0&&i%4===0) s+='-'; s+=chars.charAt(Math.floor(Math.random()*chars.length)) }
-    return s
-  }
-  const list=[]
-  for(let i=0;i<count;i++){
-    const code = genCode()
-    const pass = genPass()
-    const exists = await db.get('SELECT code FROM activation_codes WHERE code=?',[code])
-    if(exists){ i--; continue }
-    await db.run('INSERT INTO activation_codes(code,password,used,user_id,pocket_id,generated_at,expires_at,generated_by) VALUES(?,?,?,?,?,?,?,?)',[
-      code, pass, 0, null, null, new Date().toISOString(), expiryDate||null, process.env.ADMIN_USERNAME
-    ])
-    list.push({ code, password: pass, status:'未使用' })
-  }
-  res.json({ codes:list })
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }))
 })
 
-app.get('/api/codes', adminAuth, async (req,res)=>{
-  const rows = await db.all('SELECT * FROM activation_codes ORDER BY generated_at DESC')
-  res.json({ codes: rows })
+app.post('/api/admin/login', async (req, res) => {
+  const { username, password } = req.body
+  const admin = db.prepare('SELECT * FROM admins WHERE username=?').get(username)
+  if (!admin) return res.status(400).json({ error: 'invalid' })
+  const ok = await bcrypt.compare(password, admin.password_hash)
+  if (!ok) return res.status(400).json({ error: 'invalid' })
+  req.session.adminId = admin.id
+  res.json({ ok: true })
 })
 
-app.delete('/api/codes/:code', adminAuth, async (req,res)=>{
-  await db.run('DELETE FROM activation_codes WHERE code=?',[req.params.code])
-  res.json({ ok:true })
+app.get('/api/admin/activation-codes', requireAdmin, (req, res) => {
+  const rows = db.prepare('SELECT id, activation_code, activation_password, capacity, assigned_user_id, created_at, deleted_at FROM pockets').all()
+  res.json(rows)
 })
 
-app.post('/api/pockets/activate', authMiddleware, async (req,res)=>{
-  const { activationCode, activationPassword, pocketName } = req.body
-  if(!activationCode||!activationPassword||!pocketName) return res.status(400).json({error:'missing_fields'})
-  const code = await db.get('SELECT * FROM activation_codes WHERE code=?',[activationCode])
-  if(!code) return res.status(400).json({error:'code_not_found'})
-  if(code.used) return res.status(400).json({error:'code_used'})
-  if(code.password!==activationPassword) return res.status(400).json({error:'password_incorrect'})
-  if(code.expires_at && new Date(code.expires_at)<new Date()) return res.status(400).json({error:'code_expired'})
-  res.json({ ok:true })
+app.post('/api/admin/activation-codes', requireAdmin, (req, res) => {
+  const { activation_code, activation_password, capacity } = req.body
+  if (!activation_code || !activation_password) return res.status(400).json({ error: 'missing' })
+  const id = randomUUID()
+  db.prepare('INSERT INTO pockets (id, activation_code, activation_password, capacity, created_at) VALUES (?, ?, ?, ?, ?)').run(id, activation_code, activation_password, capacity || 15, Date.now())
+  res.json({ ok: true, id })
 })
 
-app.post('/api/pockets/bind-ip', authMiddleware, async (req,res)=>{
-  const { activationCode, pocketName, ipAddress, fullName, hkid } = req.body
-  if(!activationCode||!pocketName||!ipAddress||!fullName||!hkid) return res.status(400).json({error:'missing_fields'})
-  const code = await db.get('SELECT * FROM activation_codes WHERE code=?',[activationCode])
-  if(!code) return res.status(400).json({error:'code_not_found'})
-  if(code.used) return res.status(400).json({error:'code_used'})
-  const pocketId = uid('pocket')
-  await db.run('INSERT INTO pockets(id,user_id,activation_code,name,ip_address,full_name,hkid,storage_slots,used_slots,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)',[
-    pocketId, req.user.sub, activationCode, pocketName, ipAddress, fullName, hkid, 15, 0, new Date().toISOString()
-  ])
-  await db.run('UPDATE activation_codes SET used=1,user_id=?,pocket_id=?,generated_by=generated_by WHERE code=?',[req.user.sub,pocketId,activationCode])
-  await db.run('INSERT INTO activities(id,user_id,type,description,timestamp) VALUES(?,?,?,?,?)',[uid('activity'), req.user.sub, 'add_pocket', `添加了新百宝袋: ${pocketName}`, new Date().toISOString()])
-  res.json({ ok:true, pocketId })
+app.delete('/api/admin/activation-codes/:id', requireAdmin, (req, res) => {
+  const id = req.params.id
+  db.prepare('UPDATE pockets SET deleted_at=? WHERE id=?').run(Date.now(), id)
+  res.json({ ok: true })
 })
 
-app.get('/api/pockets', authMiddleware, async (req,res)=>{
-  const rows = await db.all('SELECT * FROM pockets WHERE user_id=? ORDER BY created_at DESC',[req.user.sub])
-  res.json({ pockets: rows })
+app.get('/api/admin/users', requireAdmin, (req, res) => {
+  const rows = db.prepare('SELECT id, username, email, verified_email, created_at FROM users').all()
+  res.json(rows)
 })
 
-app.delete('/api/pockets/:id', authMiddleware, async (req,res)=>{
-  const pocket = await db.get('SELECT * FROM pockets WHERE id=? AND user_id=?',[req.params.id, req.user.sub])
-  if(!pocket) return res.status(404).json({error:'not_found'})
-  await db.run('DELETE FROM items WHERE pocket_id=?',[pocket.id])
-  await db.run('DELETE FROM pockets WHERE id=?',[pocket.id])
-  res.json({ ok:true })
+app.get('/api/admin/pockets', requireAdmin, (req, res) => {
+  const rows = db.prepare('SELECT p.id, p.activation_code, p.capacity, p.assigned_user_id, u.username FROM pockets p LEFT JOIN users u ON u.id=p.assigned_user_id').all()
+  res.json(rows)
 })
 
-app.post('/api/items', authMiddleware, async (req,res)=>{
-  const { pocketId, name, category, description } = req.body
-  const pocket = await db.get('SELECT * FROM pockets WHERE id=? AND user_id=?',[pocketId, req.user.sub])
-  if(!pocket) return res.status(404).json({error:'pocket_not_found'})
-  if(pocket.used_slots >= pocket.storage_slots) return res.status(400).json({error:'storage_full'})
-  const id = uid('item')
-  await db.run('INSERT INTO items(id,pocket_id,name,category,description,added_at) VALUES(?,?,?,?,?,?)',[id,pocketId,name,category,description||'',new Date().toISOString()])
-  await db.run('UPDATE pockets SET used_slots=used_slots+1 WHERE id=?',[pocketId])
-  await db.run('INSERT INTO activities(id,user_id,type,description,timestamp) VALUES(?,?,?,?,?)',[uid('activity'), req.user.sub, 'add_item', `添加了新物品: ${name}`, new Date().toISOString()])
-  res.json({ ok:true, id })
+app.post('/api/pockets/activate', requireUser, (req, res) => {
+  const { activation_code, activation_password } = req.body
+  const pocket = db.prepare('SELECT * FROM pockets WHERE activation_code=? AND activation_password=? AND deleted_at IS NULL').get(activation_code, activation_password)
+  if (!pocket) return res.status(400).json({ error: 'invalid' })
+  if (pocket.assigned_user_id && pocket.assigned_user_id !== req.session.userId) return res.status(400).json({ error: 'owned' })
+  db.prepare('UPDATE pockets SET assigned_user_id=? WHERE id=?').run(req.session.userId, pocket.id)
+  res.json({ ok: true, pocketId: pocket.id, capacity: pocket.capacity })
 })
 
-app.delete('/api/items/:id', authMiddleware, async (req,res)=>{
-  const item = await db.get('SELECT * FROM items WHERE id=?',[req.params.id])
-  if(!item) return res.status(404).json({error:'item_not_found'})
-  const pocket = await db.get('SELECT * FROM pockets WHERE id=? AND user_id=?',[item.pocket_id, req.user.sub])
-  if(!pocket) return res.status(403).json({error:'forbidden'})
-  await db.run('DELETE FROM items WHERE id=?',[item.id])
-  await db.run('UPDATE pockets SET used_slots=CASE WHEN used_slots>0 THEN used_slots-1 ELSE 0 END WHERE id=?',[pocket.id])
-  res.json({ ok:true })
+app.post('/api/pockets/unbind', requireUser, (req, res) => {
+  const { pocketId } = req.body
+  const pocket = db.prepare('SELECT * FROM pockets WHERE id=?').get(pocketId)
+  if (!pocket || pocket.assigned_user_id !== req.session.userId) return res.status(400).json({ error: 'invalid' })
+  db.prepare('UPDATE pockets SET assigned_user_id=NULL WHERE id=?').run(pocketId)
+  res.json({ ok: true })
 })
 
-app.post('/api/storage/purchase', authMiddleware, async (req,res)=>{
-  const { pocketId, slots, price, planName } = req.body
-  const pocket = await db.get('SELECT * FROM pockets WHERE id=? AND user_id=?',[pocketId, req.user.sub])
-  if(!pocket) return res.status(404).json({error:'pocket_not_found'})
-  await db.run('UPDATE pockets SET storage_slots=storage_slots+? WHERE id=?',[slots, pocketId])
-  await db.run('INSERT INTO purchases(id,pocket_id,slots,price,plan_name,date) VALUES(?,?,?,?,?,?)',[uid('purchase'), pocketId, slots, price, planName || '', new Date().toISOString()])
-  await db.run('INSERT INTO activities(id,user_id,type,description,timestamp) VALUES(?,?,?,?,?)',[uid('activity'), req.user.sub, 'purchase', `购买了 ${slots} 个存储格`, new Date().toISOString()])
-  res.json({ ok:true })
+app.post('/api/bind-ip', requireUser, (req, res) => {
+  const { pocketId, ip, fullName, hkid } = req.body
+  if (!validateHKID(hkid)) return res.status(400).json({ error: '添加IP地址失败' })
+  const pocket = db.prepare('SELECT * FROM pockets WHERE id=? AND assigned_user_id=?').get(pocketId, req.session.userId)
+  if (!pocket) return res.status(400).json({ error: 'invalid' })
+  const id = randomUUID()
+  db.prepare('INSERT INTO bindings (id, user_id, pocket_id, ip_address, full_name, hkid, bound_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, req.session.userId, pocketId, ip, fullName, hkid, Date.now())
+  res.json({ ok: true })
 })
 
-app.post('/api/retrieve', authMiddleware, async (req,res)=>{
-  const { pocketId, itemIds } = req.body
-  const pocket = await db.get('SELECT * FROM pockets WHERE id=? AND user_id=?',[pocketId, req.user.sub])
-  if(!pocket) return res.status(404).json({error:'pocket_not_found'})
-  const ids = Array.isArray(itemIds)?itemIds:[]
-  for(const id of ids){ await db.run('DELETE FROM items WHERE id=? AND pocket_id=?',[id,pocketId]) }
-  const removedCount = ids.length
-  await db.run('UPDATE pockets SET used_slots=CASE WHEN used_slots-?>=0 THEN used_slots-? ELSE 0 END WHERE id=?',[removedCount,removedCount,pocketId])
-  await db.run('UPDATE pockets SET storage_slots=CASE WHEN storage_slots>0 THEN storage_slots-1 ELSE 0 END WHERE id=?',[pocketId])
-  await db.run('INSERT INTO activities(id,user_id,type,description,timestamp) VALUES(?,?,?,?,?)',[uid('activity'), req.user.sub, 'retrieve', `远程取物 ${removedCount} 件`, new Date().toISOString()])
-  res.json({ ok:true })
+app.get('/api/items', requireUser, (req, res) => {
+  const { pocketId } = req.query
+  const items = db.prepare('SELECT * FROM items WHERE pocket_id=?').all(pocketId)
+  res.json(items)
 })
 
-app.get('/api/user/data', authMiddleware, async (req,res)=>{
-  const user = await db.get('SELECT id,username,email,created_at,last_login FROM users WHERE id=?',[req.user.sub])
-  const pockets = await db.all('SELECT * FROM pockets WHERE user_id=?',[req.user.sub])
-  const activities = await db.all('SELECT * FROM activities WHERE user_id=? ORDER BY timestamp DESC LIMIT 50',[req.user.sub])
-  res.json({ user, pockets, recentActivity: activities })
+app.post('/api/items', requireUser, (req, res) => {
+  const { pocketId, name } = req.body
+  const pocket = db.prepare('SELECT * FROM pockets WHERE id=? AND assigned_user_id=?').get(pocketId, req.session.userId)
+  if (!pocket) return res.status(400).json({ error: 'invalid' })
+  const count = db.prepare('SELECT COUNT(*) as c FROM items WHERE pocket_id=?').get(pocketId).c
+  if (count >= pocket.capacity) return res.status(400).json({ error: 'full' })
+  const id = randomUUID()
+  db.prepare('INSERT INTO items (id, pocket_id, name, created_at) VALUES (?, ?, ?, ?)').run(id, pocketId, name, Date.now())
+  res.json({ ok: true, id })
 })
 
-app.get('/api/admin/users', adminAuth, async (req,res)=>{
-  const users = await db.all('SELECT id,username,email,created_at,last_login FROM users ORDER BY created_at DESC')
-  res.json({ users })
+app.post('/api/items/retrieve', requireUser, (req, res) => {
+  const { pocketId, itemId } = req.body
+  const pocket = db.prepare('SELECT * FROM pockets WHERE id=? AND assigned_user_id=?').get(pocketId, req.session.userId)
+  if (!pocket) return res.status(400).json({ error: 'invalid' })
+  const count = db.prepare('SELECT COUNT(*) as c FROM items WHERE pocket_id=?').get(pocketId).c
+  const newCap = pocket.capacity - 1
+  if (newCap < count) return res.status(400).json({ error: 'capacity' })
+  db.prepare('UPDATE pockets SET capacity=? WHERE id=?').run(newCap, pocketId)
+  res.json({ ok: true })
 })
 
-app.get('/api/admin/pockets', adminAuth, async (req,res)=>{
-  const rows = await db.all('SELECT p.*, u.username, u.email AS userEmail FROM pockets p JOIN users u ON p.user_id=u.id ORDER BY p.created_at DESC')
-  res.json({ pockets: rows })
+app.post('/api/pockets/purchase', requireUser, (req, res) => {
+  const { pocketId, packageType } = req.body
+  const pocket = db.prepare('SELECT * FROM pockets WHERE id=? AND assigned_user_id=?').get(pocketId, req.session.userId)
+  if (!pocket) return res.status(400).json({ error: 'invalid' })
+  let slots = 0
+  let price = 0
+  if (packageType === '5') { slots = 5; price = 100 }
+  else if (packageType === '13') { slots = 13; price = 200 }
+  else if (packageType === '30') { slots = 30; price = 350 }
+  else return res.status(400).json({ error: 'invalid' })
+  const id = randomUUID()
+  db.prepare('INSERT INTO purchases (id, user_id, pocket_id, package, slots, price, purchased_at) VALUES (?, ?, ?, ?, ?, ?, ?)').run(id, req.session.userId, pocketId, packageType, slots, price, Date.now())
+  db.prepare('UPDATE pockets SET capacity=capacity+? WHERE id=?').run(slots, pocketId)
+  res.json({ ok: true })
 })
 
-app.use('/', express.static(path.join(__dirname, '..')))
-
-initDb().then(()=>{
-  app.listen(PORT, ()=>{})
-})
+app.listen(4000, () => {})
