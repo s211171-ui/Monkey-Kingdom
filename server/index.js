@@ -148,6 +148,8 @@ app.post('/api/admin/login', (req,res)=>{
   res.status(400).json({error:'invalid_admin_credentials'})
 })
 
+app.get('/api/health', (req,res)=>{ res.json({ ok:true, time:new Date().toISOString() }) })
+
 app.post('/api/codes/generate', adminAuth, async (req,res)=>{
   const { count=1, passwordLength=8, complexity='medium', expiryDate } = req.body
   const genPass = () => {

@@ -3444,24 +3444,17 @@
         const password = document.getElementById('adminPassword').value.trim();
         const adminLoginError = document.getElementById('adminLoginError');
         const adminLoginErrorMsg = document.getElementById('adminLoginErrorMsg');
-        fetch(`${this.apiBase}/admin/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        }).then(async r => {
-          if (!r.ok) throw new Error('admin_login_failed');
-          return r.json();
-        }).then(data => {
+        if (username === this.adminUsername && password === this.adminPassword) {
           this.currentAdmin = { username };
-          sessionStorage.setItem('monkeyPocketAdmin', JSON.stringify({ adminUsername: username, expiry: Date.now() + 12 * 60 * 60 * 1000, token: data.token }));
+          sessionStorage.setItem('monkeyPocketAdmin', JSON.stringify({ adminUsername: username, expiry: Date.now() + 12 * 60 * 60 * 1000 }));
           this.showAdminContent();
           this.updateAdminDashboard();
           this.showAdminPage('adminDashboard');
           adminLoginError.classList.add('hidden');
-        }).catch(() => {
+        } else {
           adminLoginErrorMsg.textContent = '管理员账号或密码不正确';
           adminLoginError.classList.remove('hidden');
-        })
+        }
       },
       
       
@@ -3484,15 +3477,19 @@
         if (!agreeTerms) { registerErrorMsg.textContent = this.currentLang==='en'?'You must agree to the terms and conditions.':'您必须同意服务条款和隐私政策。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
         if (password !== confirmPassword) { registerErrorMsg.textContent = this.currentLang==='en'?'Passwords do not match.':'密码不匹配。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
         if (password.length<8 || !/\d/.test(password) || !/[a-zA-Z]/.test(password)) { registerErrorMsg.textContent = this.currentLang==='en'?'Password must be at least 8 characters with letters and numbers.':'密码必须至少8个字符，包含字母和数字。'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return; }
-        fetch(`${this.apiBase}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username,email,password }) })
-          .then(async r=>{ if(!r.ok) throw new Error('register_failed'); return r.json() })
-          .then(()=>{
-            registerError.classList.add('hidden');
-            registerSuccess.classList.remove('hidden');
-            document.getElementById('registerFormElement').reset();
-            setTimeout(()=>{ this.showLoginForm(); registerSuccess.classList.add('hidden'); },3000)
-          })
-          .catch(()=>{ registerErrorMsg.textContent = this.currentLang==='en'?'Registration failed.':'注册失败'; registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); })
+        if (this.users[email]) {
+          registerErrorMsg.textContent = this.currentLang==='en'?'Email already registered.':'邮箱已被注册。';
+          registerError.classList.remove('hidden'); registerSuccess.classList.add('hidden'); return;
+        }
+        const newUser = { id: 'user_' + Date.now(), username, email, password, createdAt: new Date().toISOString(), lastLogin: null, rememberMe: false };
+        this.users[email] = newUser;
+        localStorage.setItem('monkeyPocketUsers', JSON.stringify(this.users));
+        const userData = { pockets: [], recentActivity: [] };
+        localStorage.setItem(`user_${newUser.id}_data`, JSON.stringify(userData));
+        registerError.classList.add('hidden');
+        registerSuccess.classList.remove('hidden');
+        document.getElementById('registerFormElement').reset();
+        setTimeout(()=>{ this.showLoginForm(); registerSuccess.classList.add('hidden'); },3000)
       },
       
       // 处理激活
