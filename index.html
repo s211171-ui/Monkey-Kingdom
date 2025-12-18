@@ -1,613 +1,854 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>优雅钢琴 - 在线虚拟钢琴</title>
-  <!-- 引入外部资源 -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  
-  <!-- 配置Tailwind自定义主题 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#165DFF',
-            secondary: '#36CFC9',
-            dark: '#1D2129',
-            light: '#F2F3F5'
-          },
-          fontFamily: {
-            inter: ['Inter', 'system-ui', 'sans-serif'],
-          },
-        },
-      }
-    }
-  </script>
-  
-  <!-- 自定义工具类 -->
-  <style type="text/tailwindcss">
-    @layer utilities {
-      .content-auto {
-        content-visibility: auto;
-      }
-      .piano-key-shadow {
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      }
-      .piano-key-active {
-        transform: translateY(2px);
-        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
-      }
-      .text-shadow {
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-      .glass-effect {
-        backdrop-filter: blur(10px);
-        background-color: rgba(255, 255, 255, 0.7);
-      }
-    }
-  </style>
-  
-  <style>
-    /* 基础样式 */
-    body {
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    
-    /* 钢琴键样式 */
-    .piano-key {
-      transition: all 0.1s ease;
-      user-select: none;
-    }
-    
-    .white-key {
-      background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 100%);
-      border-radius: 0 0 8px 8px;
-      border: 1px solid #e0e0e0;
-    }
-    
-    .white-key.active {
-      background: linear-gradient(180deg, #e0e0e0 0%, #d0d0d0 100%);
-    }
-    
-    .black-key {
-      background: linear-gradient(180deg, #333333 0%, #111111 100%);
-      border-radius: 0 0 6px 6px;
-      position: absolute;
-      z-index: 20;
-      width: 60%;
-      height: 60%;
-      left: 70%;
-    }
-    
-    .black-key.active {
-      background: linear-gradient(180deg, #555555 0%, #333333 100%);
-    }
-    
-    /* 动画效果 */
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-      100% { transform: translateY(0px); }
-    }
-    
-    .animate-float {
-      animation: float 3s ease-in-out infinite;
-    }
-    
-    /* 滚动条样式 */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: rgba(22, 93, 255, 0.3);
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgba(22, 93, 255, 0.5);
-    }
-  </style>
-</head>
-
-<body class="font-inter text-dark antialiased">
-  <!-- 顶部导航栏 -->
-  <header class="fixed top-0 left-0 right-0 z-50 transition-all duration-300" id="navbar">
-    <div class="container mx-auto px-4 py-3 flex items-center justify-between glass-effect">
-      <div class="flex items-center space-x-2">
-        <i class="fa fa-music text-primary text-2xl"></i>
-        <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-          优雅钢琴
-        </h1>
-      </div>
-      
-      <nav class="hidden md:flex items-center space-x-8">
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium">首页</a>
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium">教程</a>
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium">乐谱</a>
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium">关于</a>
-      </nav>
-      
-      <div class="flex items-center space-x-4">
-        <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-200 transition-colors duration-300">
-          <i class="fa fa-moon-o text-dark"></i>
-        </button>
-        <button class="md:hidden p-2 rounded-full hover:bg-gray-200 transition-colors duration-300" id="mobile-menu-btn">
-          <i class="fa fa-bars text-dark"></i>
-        </button>
-      </div>
-    </div>
-    
-    <!-- 移动端菜单 -->
-    <div id="mobile-menu" class="hidden md:hidden glass-effect px-4 py-2">
-      <nav class="flex flex-col space-y-3 py-2">
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium py-1">首页</a>
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium py-1">教程</a>
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium py-1">乐谱</a>
-        <a href="#" class="text-dark hover:text-primary transition-colors duration-300 font-medium py-1">关于</a>
-      </nav>
-    </div>
-  </header>
-
-  <!-- 主要内容区 -->
-  <main class="container mx-auto px-4 pt-28 pb-16">
-    <!-- 英雄区域 -->
-    <section class="text-center mb-12">
-      <h2 class="text-[clamp(2rem,5vw,3.5rem)] font-bold mb-4 text-shadow">
-        释放你的<span class="text-primary">音乐天赋</span>
-      </h2>
-      <p class="text-gray-600 text-[clamp(1rem,2vw,1.25rem)] max-w-2xl mx-auto mb-8">
-        无需实体钢琴，随时随地弹奏你喜爱的乐曲。支持键盘、鼠标和触摸操作，多种音色任你选择。
-      </p>
-      <div class="flex flex-wrap justify-center gap-4">
-        <button class="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
-          <i class="fa fa-play"></i> 开始弹奏
-        </button>
-        <button class="bg-white hover:bg-gray-100 text-dark font-medium px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2">
-          <i class="fa fa-music"></i> 查看教程
-        </button>
-      </div>
-    </section>
-    
-    <!-- 钢琴控制面板 -->
-    <section class="mb-8 bg-white/80 backdrop-blur-md rounded-xl shadow-xl p-4 md:p-6">
-      <div class="flex flex-wrap gap-4 justify-between items-center">
-        <div class="flex flex-wrap gap-3">
-          <div class="relative">
-            <select id="instrument-select" class="appearance-none bg-white border border-gray-300 rounded-lg py-2 pl-4 pr-10 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 cursor-pointer">
-              <option value="piano">钢琴</option>
-              <option value="grand-piano">三角钢琴</option>
-              <option value="organ">管风琴</option>
-              <option value="synth">合成器</option>
-              <option value="violin">小提琴</option>
-            </select>
-            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <i class="fa fa-chevron-down text-xs"></i>
-            </div>
-          </div>
-          
-          <button id="record-btn" class="flex items-center gap-2 bg-white border border-gray-300 hover:border-primary hover:text-primary rounded-lg py-2 px-4 transition-all duration-300">
-            <i class="fa fa-circle text-red-500"></i> 录音
-          </button>
-          
-          <button id="play-record-btn" class="flex items-center gap-2 bg-white border border-gray-300 hover:border-primary hover:text-primary rounded-lg py-2 px-4 transition-all duration-300 opacity-50 cursor-not-allowed">
-            <i class="fa fa-play"></i> 播放录音
-          </button>
-        </div>
-        
-        <div class="flex items-center gap-3 w-full md:w-auto">
-          <label for="volume-control" class="text-sm text-gray-600">音量</label>
-          <input type="range" id="volume-control" min="0" max="100" value="80" class="w-full md:w-40 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary">
-          <span id="volume-value" class="text-sm font-medium">80%</span>
-        </div>
-      </div>
-    </section>
-    
-    <!-- 钢琴键盘区域 -->
-    <section class="relative bg-gray-800 rounded-xl shadow-2xl p-4 md:p-6 overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-b from-gray-900/50 to-transparent pointer-events-none"></div>
-      
-      <!-- 键盘快捷键提示 -->
-      <div class="absolute top-2 left-4 text-xs text-white/70 z-10">
-        <span>键盘快捷键: A-L (白键) | W-B (黑键)</span>
-      </div>
-      
-      <div class="relative h-[300px] md:h-[400px] flex items-end justify-center" id="piano-container">
-        <!-- 钢琴键将通过JavaScript动态生成 -->
-      </div>
-    </section>
-    
-    <!-- 功能特点 -->
-    <section class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-          <i class="fa fa-keyboard-o text-primary text-xl"></i>
-        </div>
-        <h3 class="text-xl font-bold mb-2">多方式操作</h3>
-        <p class="text-gray-600">支持键盘、鼠标和触摸操作，无论你在电脑还是移动设备上，都能流畅弹奏。</p>
-      </div>
-      
-      <div class="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-          <i class="fa fa-headphones text-primary text-xl"></i>
-        </div>
-        <h3 class="text-xl font-bold mb-2">多种音色</h3>
-        <p class="text-gray-600">内置钢琴、管风琴、合成器等多种音色，满足不同音乐风格的创作需求。</p>
-      </div>
-      
-      <div class="bg-white/80 backdrop-blur-md rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-        <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-          <i class="fa fa-record text-primary text-xl"></i>
-        </div>
-        <h3 class="text-xl font-bold mb-2">录音功能</h3>
-        <p class="text-gray-600">支持录制你的弹奏作品，随时回放聆听，记录你的音乐创作灵感。</p>
-      </div>
-    </section>
-  </main>
-
-  <!-- 页脚 -->
-  <footer class="bg-dark text-white py-12">
-    <div class="container mx-auto px-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div>
-          <div class="flex items-center space-x-2 mb-4">
-            <i class="fa fa-music text-primary text-2xl"></i>
-            <h3 class="text-xl font-bold">优雅钢琴</h3>
-          </div>
-          <p class="text-gray-400 mb-4">让音乐触手可及，释放你的创作灵感。</p>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
-              <i class="fa fa-facebook"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
-              <i class="fa fa-twitter"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
-              <i class="fa fa-instagram"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">
-              <i class="fa fa-youtube"></i>
-            </a>
-          </div>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-semibold mb-4">快速链接</h4>
-          <ul class="space-y-2">
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">首页</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">教程</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">乐谱库</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">关于我们</a></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-semibold mb-4">支持</h4>
-          <ul class="space-y-2">
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">帮助中心</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">常见问题</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">联系我们</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-primary transition-colors duration-300">隐私政策</a></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="text-lg font-semibold mb-4">订阅更新</h4>
-          <p class="text-gray-400 mb-4">订阅我们的通讯，获取最新功能和音乐资源。</p>
-          <form class="flex">
-            <input type="email" placeholder="你的邮箱地址" class="px-4 py-2 rounded-l-lg w-full focus:outline-none text-dark">
-            <button type="submit" class="bg-primary hover:bg-primary/90 px-4 rounded-r-lg transition-colors duration-300">
-              <i class="fa fa-paper-plane"></i>
-            </button>
-          </form>
-        </div>
-      </div>
-      
-      <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
-        <p>&copy; 2025 优雅钢琴. 保留所有权利.</p>
-      </div>
-    </div>
-  </footer>
-
-  <!-- JavaScript -->
-  <script>
-    // 钢琴键盘数据
-    const pianoKeys = [
-      // 八度1
-      { note: 'C1', key: 'A', type: 'white', frequency: 32.70 },
-      { note: 'C#1', key: 'W', type: 'black', frequency: 34.65 },
-      { note: 'D1', key: 'S', type: 'white', frequency: 36.71 },
-      { note: 'D#1', key: 'E', type: 'black', frequency: 38.89 },
-      { note: 'E1', key: 'D', type: 'white', frequency: 41.20 },
-      { note: 'F1', key: 'F', type: 'white', frequency: 43.65 },
-      { note: 'F#1', key: 'T', type: 'black', frequency: 46.25 },
-      { note: 'G1', key: 'G', type: 'white', frequency: 49.00 },
-      { note: 'G#1', key: 'Y', type: 'black', frequency: 51.91 },
-      { note: 'A1', key: 'H', type: 'white', frequency: 55.00 },
-      { note: 'A#1', key: 'U', type: 'black', frequency: 58.27 },
-      { note: 'B1', key: 'J', type: 'white', frequency: 61.74 },
-      
-      // 八度2
-      { note: 'C2', key: 'K', type: 'white', frequency: 65.41 },
-      { note: 'C#2', key: 'O', type: 'black', frequency: 69.30 },
-      { note: 'D2', key: 'L', type: 'white', frequency: 73.42 },
-      { note: 'D#2', key: 'P', type: 'black', frequency: 77.78 },
-      { note: 'E2', key: ';', type: 'white', frequency: 82.41 },
-      { note: 'F2', key: "'", type: 'white', frequency: 87.31 },
-      { note: 'F#2', key: '[', type: 'black', frequency: 92.50 },
-      { note: 'G2', key: ']', type: 'white', frequency: 98.00 },
-      { note: 'G#2', key: '\\', type: 'black', frequency: 103.83 },
-      { note: 'A2', key: 'Z', type: 'white', frequency: 110.00 },
-      { note: 'A#2', key: 'X', type: 'black', frequency: 116.54 },
-      { note: 'B2', key: 'C', type: 'white', frequency: 123.47 },
-    ];
-    
-    // Web Audio API 初始化
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    const audioContext = new AudioContext();
-    let gainNode = audioContext.createGain();
-    gainNode.connect(audioContext.destination);
-    
-    // 音量控制
-    const volumeControl = document.getElementById('volume-control');
-    const volumeValue = document.getElementById('volume-value');
-    
-    volumeControl.addEventListener('input', () => {
-      const volume = volumeControl.value / 100;
-      gainNode.gain.value = volume;
-      volumeValue.textContent = `${volumeControl.value}%`;
-    });
-    
-    // 设置初始音量
-    gainNode.gain.value = volumeControl.value / 100;
-    
-    // 创建钢琴键
-    const pianoContainer = document.getElementById('piano-container');
-    
-    pianoKeys.forEach((key, index) => {
-      // 创建键容器
-      const keyContainer = document.createElement('div');
-      keyContainer.className = `relative flex-1 h-full ${key.type === 'white' ? 'mr-1' : ''}`;
-      keyContainer.dataset.note = key.note;
-      keyContainer.dataset.key = key.key;
-      
-      // 创建键元素
-      const keyElement = document.createElement('div');
-      keyElement.className = `piano-key ${key.type}-key piano-key-shadow`;
-      keyElement.dataset.note = key.note;
-      keyElement.dataset.key = key.key;
-      keyElement.dataset.frequency = key.frequency;
-      
-      // 添加键标签
-      const keyLabel = document.createElement('div');
-      keyLabel.className = `absolute bottom-3 left-0 right-0 text-center text-xs ${key.type === 'white' ? 'text-gray-600' : 'text-white/70'}`;
-      keyLabel.textContent = `${key.note}\n(${key.key})`;
-      keyElement.appendChild(keyLabel);
-      
-      // 添加到容器
-      keyContainer.appendChild(keyElement);
-      pianoContainer.appendChild(keyContainer);
-      
-      // 添加事件监听
-      keyElement.addEventListener('mousedown', () => playNote(keyElement));
-      keyElement.addEventListener('mouseup', () => stopNote(keyElement));
-      keyElement.addEventListener('mouseleave', () => stopNote(keyElement));
-      
-      // 触摸设备支持
-      keyElement.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        playNote(keyElement);
-      });
-      keyElement.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        stopNote(keyElement);
-      });
-    });
-    
-    // 播放音符
-    function playNote(keyElement) {
-      if (audioContext.state === 'suspended') {
-        audioContext.resume();
-      }
-      
-      const frequency = parseFloat(keyElement.dataset.frequency);
-      const note = keyElement.dataset.note;
-      
-      // 创建振荡器
-      const oscillator = audioContext.createOscillator();
-      oscillator.type = getOscillatorType();
-      oscillator.frequency.value = frequency;
-      
-      // 连接到增益节点
-      oscillator.connect(gainNode);
-      
-      // 存储振荡器引用以便后续停止
-      keyElement.oscillator = oscillator;
-      
-      // 启动振荡器
-      oscillator.start();
-      
-      // 添加活动状态
-      keyElement.classList.add('active', 'piano-key-active');
-      
-      // 记录音符（如果正在录音）
-      if (isRecording) {
-        recordNote(note, audioContext.currentTime);
-      }
-    }
-    
-    // 停止音符
-    function stopNote(keyElement) {
-      if (keyElement.oscillator) {
-        keyElement.oscillator.stop();
-        keyElement.oscillator.disconnect();
-        delete keyElement.oscillator;
-      }
-      
-      // 移除活动状态
-      keyElement.classList.remove('active', 'piano-key-active');
-    }
-    
-    // 根据选择的乐器获取振荡器类型
-    function getOscillatorType() {
-      const instrument = document.getElementById('instrument-select').value;
-      
-      switch(instrument) {
-        case 'piano':
-        case 'grand-piano':
-          return 'sine';
-        case 'organ':
-          return 'triangle';
-        case 'synth':
-          return 'sawtooth';
-        case 'violin':
-          return 'square';
-        default:
-          return 'sine';
-      }
-    }
-    
-    // 键盘快捷键支持
-    document.addEventListener('keydown', (e) => {
-      if (e.repeat) return; // 防止重复触发
-      
-      const key = e.key.toUpperCase();
-      const keyElement = document.querySelector(`.piano-key[data-key="${key}"]`);
-      
-      if (keyElement) {
-        playNote(keyElement);
-      }
-    });
-    
-    document.addEventListener('keyup', (e) => {
-      const key = e.key.toUpperCase();
-      const keyElement = document.querySelector(`.piano-key[data-key="${key}"]`);
-      
-      if (keyElement) {
-        stopNote(keyElement);
-      }
-    });
-    
-    // 录音功能
-    let isRecording = false;
-    let recordingStartTime = 0;
-    let recordedNotes = [];
-    
-    const recordBtn = document.getElementById('record-btn');
-    const playRecordBtn = document.getElementById('play-record-btn');
-    
-    recordBtn.addEventListener('click', () => {
-      isRecording = !isRecording;
-      
-      if (isRecording) {
-        // 开始录音
-        recordedNotes = [];
-        recordingStartTime = audioContext.currentTime;
-        recordBtn.innerHTML = '<i class="fa fa-stop text-red-500"></i> 停止录音';
-        recordBtn.classList.add('bg-red-100', 'text-red-500', 'border-red-300');
-        recordBtn.classList.remove('hover:border-primary', 'hover:text-primary');
-        playRecordBtn.classList.add('opacity-50', 'cursor-not-allowed');
-      } else {
-        // 停止录音
-        recordBtn.innerHTML = '<i class="fa fa-circle text-red-500"></i> 录音';
-        recordBtn.classList.remove('bg-red-100', 'text-red-500', 'border-red-300');
-        recordBtn.classList.add('hover:border-primary', 'hover:text-primary');
-        
-        // 如果有录音，启用播放按钮
-        if (recordedNotes.length > 0) {
-          playRecordBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线钢琴 - 随时随地弹奏美妙音乐</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- GSAP 动画库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        dark: '#1E293B',
+                        light: '#F8FAFC',
+                        accent: '#8B5CF6'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'piano': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'key-white': 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 3px rgba(0, 0, 0, 0.2)',
+                        'key-black': 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.4)',
+                        'key-white-active': 'inset 0 1px 0 rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.2)',
+                        'key-black-active': 'inset 0 1px 0 rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.5)',
+                    }
+                }
+            }
         }
-      }
-    });
-    
-    // 记录音符
-    function recordNote(note, time) {
-      recordedNotes.push({
-        note,
-        time: time - recordingStartTime
-      });
-    }
-    
-    // 播放录音
-    playRecordBtn.addEventListener('click', () => {
-      if (recordedNotes.length === 0) return;
-      
-      // 暂停当前所有播放的音符
-      document.querySelectorAll('.piano-key.active').forEach(key => {
-        stopNote(key);
-      });
-      
-      // 播放每个记录的音符
-      recordedNotes.forEach(note => {
-        setTimeout(() => {
-          const keyElement = document.querySelector(`.piano-key[data-note="${note.note}"]`);
-          if (keyElement) {
-            playNote(keyElement);
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .piano-container {
+                position: relative;
+                width: 100%;
+                height: 300px;
+                margin: 0 auto;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 0 10px;
+            }
             
-            // 0.5秒后停止音符
-            setTimeout(() => {
-              stopNote(keyElement);
-            }, 500);
-          }
-        }, note.time * 1000);
-      });
-    });
+            .piano-keys {
+                position: relative;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: flex-end;
+            }
+            
+            .key {
+                position: relative;
+                border-radius: 0 0 5px 5px;
+                cursor: pointer;
+                transition: all 0.1s ease;
+                user-select: none;
+                display: flex;
+                justify-content: center;
+                align-items: flex-end;
+                padding-bottom: 10px;
+                box-sizing: border-box;
+            }
+            
+            .key-white {
+                width: 60px;
+                height: 240px;
+                background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
+                border: 1px solid #ccc;
+                z-index: 1;
+                color: #333;
+                font-weight: bold;
+            }
+            
+            .key-black {
+                width: 36px;
+                height: 150px;
+                background: linear-gradient(to bottom, #333333 0%, #111111 100%);
+                margin: 0 -18px;
+                z-index: 2;
+                color: #fff;
+            }
+            
+            .key-white.active {
+                background: linear-gradient(to bottom, #e0e0e0 0%, #d0d0d0 100%);
+                transform: translateY(2px);
+                box-shadow: var(--tw-shadow-key-white-active);
+            }
+            
+            .key-black.active {
+                background: linear-gradient(to bottom, #222222 0%, #000000 100%);
+                transform: translateY(2px);
+                box-shadow: var(--tw-shadow-key-black-active);
+            }
+            
+            .key-text {
+                opacity: 0.7;
+                font-size: 14px;
+            }
+            
+            .key-white .key-text {
+                opacity: 0.5;
+            }
+            
+            .key:hover .key-text {
+                opacity: 1;
+            }
+            
+            .key:active .key-text {
+                opacity: 1;
+            }
+            
+            .control-panel {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                right: 10px;
+                z-index: 10;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            
+            .control-buttons {
+                display: flex;
+                gap: 10px;
+            }
+            
+            .control-btn {
+                background-color: rgba(255, 255, 255, 0.2);
+                border: none;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                cursor: pointer;
+                color: white;
+                transition: all 0.2s ease;
+                backdrop-filter: blur(5px);
+            }
+            
+            .control-btn:hover {
+                background-color: rgba(255, 255, 255, 0.3);
+                transform: scale(1.05);
+            }
+            
+            .control-btn.active {
+                background-color: rgba(59, 130, 246, 0.8);
+            }
+            
+            .volume-control {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                background-color: rgba(255, 255, 255, 0.2);
+                padding: 5px 10px;
+                border-radius: 20px;
+                backdrop-filter: blur(5px);
+            }
+            
+            .volume-slider {
+                width: 100px;
+                height: 4px;
+                -webkit-appearance: none;
+                appearance: none;
+                background: rgba(255, 255, 255, 0.5);
+                outline: none;
+                border-radius: 2px;
+            }
+            
+            .volume-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 12px;
+                height: 12px;
+                background: white;
+                border-radius: 50%;
+                cursor: pointer;
+            }
+            
+            .volume-slider::-moz-range-thumb {
+                width: 12px;
+                height: 12px;
+                background: white;
+                border-radius: 50%;
+                cursor: pointer;
+                border: none;
+            }
+            
+            .piano-bg {
+                background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+                min-height: 100vh;
+            }
+            
+            .header {
+                padding: 20px;
+                text-align: center;
+                color: white;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+                opacity: 0.8;
+            }
+            
+            .footer {
+                padding: 20px;
+                text-align: center;
+                color: white;
+                opacity: 0.7;
+                font-size: 0.9rem;
+            }
+            
+            .footer a {
+                color: #3B82F6;
+                text-decoration: none;
+            }
+            
+            .footer a:hover {
+                text-decoration: underline;
+            }
+            
+            .keyboard-hints {
+                position: absolute;
+                bottom: 10px;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                gap: 5px;
+                z-index: 5;
+                opacity: 0.7;
+                font-size: 12px;
+                color: white;
+            }
+            
+            .keyboard-hint {
+                background-color: rgba(0, 0, 0, 0.5);
+                padding: 2px 5px;
+                border-radius: 3px;
+            }
+            
+            .song-sheet {
+                background-color: rgba(255, 255, 255, 0.1);
+                border-radius: 10px;
+                padding: 20px;
+                margin: 20px auto;
+                max-width: 800px;
+                backdrop-filter: blur(5px);
+                color: white;
+                display: none;
+            }
+            
+            .song-sheet.active {
+                display: block;
+            }
+            
+            .song-title {
+                font-size: 1.5rem;
+                font-weight: bold;
+                margin-bottom: 15px;
+                text-align: center;
+            }
+            
+            .song-lyrics {
+                font-size: 1rem;
+                line-height: 1.6;
+                white-space: pre-line;
+                text-align: center;
+            }
+            
+            .recorded-notes {
+                position: absolute;
+                top: 60px;
+                left: 10px;
+                right: 10px;
+                height: 80px;
+                overflow: hidden;
+                z-index: 5;
+                display: flex;
+                align-items: center;
+                padding: 0 10px;
+            }
+            
+            .recorded-note {
+                background-color: rgba(59, 130, 246, 0.7);
+                color: white;
+                padding: 3px 8px;
+                border-radius: 10px;
+                margin-right: 5px;
+                font-size: 12px;
+                animation: fadeInOut 2s ease-in-out;
+            }
+            
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(-10px); }
+                10% { opacity: 1; transform: translateY(0); }
+                90% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(10px); }
+            }
+            
+            .mobile-hint {
+                display: none;
+                text-align: center;
+                color: white;
+                margin: 10px 0;
+                font-size: 0.9rem;
+                opacity: 0.8;
+            }
+            
+            @media (max-width: 768px) {
+                .piano-container {
+                    height: 250px;
+                }
+                
+                .key-white {
+                    width: 50px;
+                    height: 200px;
+                }
+                
+                .key-black {
+                    width: 30px;
+                    height: 120px;
+                    margin: 0 -15px;
+                }
+                
+                .key-text {
+                    font-size: 12px;
+                }
+                
+                .header h1 {
+                    font-size: 2rem;
+                }
+                
+                .header p {
+                    font-size: 1rem;
+                }
+                
+                .keyboard-hints {
+                    display: none;
+                }
+                
+                .mobile-hint {
+                    display: block;
+                }
+                
+                .volume-slider {
+                    width: 70px;
+                }
+            }
+            
+            @media (max-width: 480px) {
+                .piano-container {
+                    height: 200px;
+                }
+                
+                .key-white {
+                    width: 40px;
+                    height: 160px;
+                }
+                
+                .key-black {
+                    width: 24px;
+                    height: 100px;
+                    margin: 0 -12px;
+                }
+                
+                .key-text {
+                    font-size: 10px;
+                }
+                
+                .header h1 {
+                    font-size: 1.5rem;
+                }
+                
+                .header p {
+                    font-size: 0.9rem;
+                }
+                
+                .control-btn {
+                    width: 35px;
+                    height: 35px;
+                }
+                
+                .volume-control {
+                    padding: 3px 8px;
+                }
+                
+                .volume-slider {
+                    width: 50px;
+                }
+            }
+        }
+    </style>
+</head>
+<body class="piano-bg">
+    <div class="header">
+        <h1>在线钢琴</h1>
+        <p>随时随地弹奏美妙音乐</p>
+        <div class="mobile-hint">点击或触摸琴键来弹奏钢琴</div>
+    </div>
     
-    // 移动端菜单切换
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
+    <div class="song-sheet" id="songSheet">
+        <div class="song-title" id="songTitle"></div>
+        <div class="song-lyrics" id="songLyrics"></div>
+    </div>
     
-    mobileMenuBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
-    });
+    <div class="piano-container">
+        <div class="control-panel">
+            <div class="control-buttons">
+                <button class="control-btn" id="recordBtn" title="录音">
+                    <i class="fa fa-microphone"></i>
+                </button>
+                <button class="control-btn" id="playBtn" title="播放录音">
+                    <i class="fa fa-play"></i>
+                </button>
+                <button class="control-btn" id="clearBtn" title="清除录音">
+                    <i class="fa fa-trash"></i>
+                </button>
+                <button class="control-btn" id="songBtn" title="简易乐谱">
+                    <i class="fa fa-music"></i>
+                </button>
+            </div>
+            
+            <div class="volume-control">
+                <i class="fa fa-volume-down"></i>
+                <input type="range" min="0" max="100" value="80" class="volume-slider" id="volumeSlider">
+                <i class="fa fa-volume-up"></i>
+            </div>
+        </div>
+        
+        <div class="recorded-notes" id="recordedNotes"></div>
+        
+        <div class="piano-keys" id="pianoKeys">
+            <!-- 钢琴键将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="keyboard-hints">
+            <div class="keyboard-hint">A</div>
+            <div class="keyboard-hint">W</div>
+            <div class="keyboard-hint">S</div>
+            <div class="keyboard-hint">E</div>
+            <div class="keyboard-hint">D</div>
+            <div class="keyboard-hint">F</div>
+            <div class="keyboard-hint">T</div>
+            <div class="keyboard-hint">G</div>
+            <div class="keyboard-hint">Y</div>
+            <div class="keyboard-hint">H</div>
+            <div class="keyboard-hint">U</div>
+            <div class="keyboard-hint">J</div>
+            <div class="keyboard-hint">K</div>
+        </div>
+    </div>
     
-    // 导航栏滚动效果
-    const navbar = document.getElementById('navbar');
-    
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 50) {
-        navbar.classList.add('py-2', 'shadow-md');
-        navbar.classList.remove('py-3');
-      } else {
-        navbar.classList.add('py-3');
-        navbar.classList.remove('py-2', 'shadow-md');
-      }
-    });
-    
-    // 主题切换功能
-    const themeToggle = document.getElementById('theme-toggle');
-    let isDarkMode = false;
-    
-    themeToggle.addEventListener('click', () => {
-      isDarkMode = !isDarkMode;
-      
-      if (isDarkMode) {
-        document.body.classList.add('bg-dark', 'text-white');
-        document.body.classList.remove('bg-gradient-to-br', 'from-gray-50', 'to-gray-100', 'text-dark');
-        themeToggle.innerHTML = '<i class="fa fa-sun-o text-yellow-400"></i>';
-      } else {
-        document.body.classList.remove('bg-dark', 'text-white');
-        document.body.classList.add('bg-gradient-to-br', 'from-gray-50', 'to-gray-100', 'text-dark');
-        themeToggle.innerHTML = '<i class="fa fa-moon-o text-dark"></i>';
-      }
-    });
-    
-    // 初始化页面时创建钢琴键
-    window.addEventListener('DOMContentLoaded', () => {
-      // 钢琴键已在前面的代码中创建
-      console.log('优雅钢琴已加载完成，开始弹奏吧！');
-    });
-  </script>
+    <div class="footer">
+        <p>© 2025 在线钢琴 | 随时随地弹奏美妙音乐</p>
+    </div>
+
+    <script>
+        // 定义钢琴音符和对应的音频文件
+        const pianoNotes = [
+            { note: 'C4', type: 'white', key: 'a', audioUrl: 'https://assets.codepen.io/3340260/piano_C4.mp3' },
+            { note: 'C#4', type: 'black', key: 'w', audioUrl: 'https://assets.codepen.io/3340260/piano_C%234.mp3' },
+            { note: 'D4', type: 'white', key: 's', audioUrl: 'https://assets.codepen.io/3340260/piano_D4.mp3' },
+            { note: 'D#4', type: 'black', key: 'e', audioUrl: 'https://assets.codepen.io/3340260/piano_D%234.mp3' },
+            { note: 'E4', type: 'white', key: 'd', audioUrl: 'https://assets.codepen.io/3340260/piano_E4.mp3' },
+            { note: 'F4', type: 'white', key: 'f', audioUrl: 'https://assets.codepen.io/3340260/piano_F4.mp3' },
+            { note: 'F#4', type: 'black', key: 't', audioUrl: 'https://assets.codepen.io/3340260/piano_F%234.mp3' },
+            { note: 'G4', type: 'white', key: 'g', audioUrl: 'https://assets.codepen.io/3340260/piano_G4.mp3' },
+            { note: 'G#4', type: 'black', key: 'y', audioUrl: 'https://assets.codepen.io/3340260/piano_G%234.mp3' },
+            { note: 'A4', type: 'white', key: 'h', audioUrl: 'https://assets.codepen.io/3340260/piano_A4.mp3' },
+            { note: 'A#4', type: 'black', key: 'u', audioUrl: 'https://assets.codepen.io/3340260/piano_A%234.mp3' },
+            { note: 'B4', type: 'white', key: 'j', audioUrl: 'https://assets.codepen.io/3340260/piano_B4.mp3' },
+            { note: 'C5', type: 'white', key: 'k', audioUrl: 'https://assets.codepen.io/3340260/piano_C5.mp3' }
+        ];
+
+        // 简易乐谱数据
+        const songs = [
+            {
+                title: "小星星",
+                lyrics: `C4 C4 G4 G4 A4 A4 G4
+F4 F4 E4 E4 D4 D4 C4
+G4 G4 F4 F4 E4 E4 D4
+G4 G4 F4 F4 E4 E4 D4
+C4 C4 G4 G4 A4 A4 G4
+F4 F4 E4 E4 D4 D4 C4`
+            },
+            {
+                title: "欢乐颂",
+                lyrics: `E4 E4 F4 G4 G4 F4 E4 D4
+C4 C4 D4 E4 E4 D4 D4
+E4 E4 F4 G4 G4 F4 E4 D4
+C4 C4 D4 E4 D4 C4 C4
+D4 D4 E4 C4 D4 E4 F4 E4 C4
+D4 E4 F4 E4 D4 C4 D4
+E4 E4 F4 G4 G4 F4 E4 D4
+C4 C4 D4 E4 D4 C4 C4`
+            },
+            {
+                title: "两只老虎",
+                lyrics: `C4 D4 E4 C4 C4 D4 E4 C4
+E4 F4 G4 E4 F4 G4
+G4 A4 G4 F4 E4 C4
+G4 A4 G4 F4 E4 C4
+C4 G3 E4 C4 C4 G3 E4 C4`
+            }
+        ];
+
+        // 当前选中的歌曲索引
+        let currentSongIndex = 0;
+
+        // DOM元素
+        const pianoKeys = document.getElementById('pianoKeys');
+        const recordBtn = document.getElementById('recordBtn');
+        const playBtn = document.getElementById('playBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const songBtn = document.getElementById('songBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const recordedNotes = document.getElementById('recordedNotes');
+        const songSheet = document.getElementById('songSheet');
+        const songTitle = document.getElementById('songTitle');
+        const songLyrics = document.getElementById('songLyrics');
+
+        // 状态变量
+        let isRecording = false;
+        let recordedSong = [];
+        let isPlaying = false;
+        let volume = 0.8;
+        let audioContext = null;
+        let oscillators = {};
+
+        // 初始化钢琴
+        function initPiano() {
+            // 创建钢琴键
+            pianoNotes.forEach((note, index) => {
+                const keyElement = document.createElement('div');
+                keyElement.classList.add('key');
+                keyElement.classList.add(`key-${note.type}`);
+                keyElement.dataset.note = note.note;
+                keyElement.dataset.key = note.key;
+                
+                const keyText = document.createElement('div');
+                keyText.classList.add('key-text');
+                keyText.textContent = note.note;
+                
+                keyElement.appendChild(keyText);
+                pianoKeys.appendChild(keyElement);
+                
+                // 添加点击事件
+                keyElement.addEventListener('mousedown', () => playNote(note));
+                keyElement.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    playNote(note);
+                });
+            });
+            
+            // 初始化音频上下文
+            try {
+                window.AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContext();
+            } catch (e) {
+                console.warn('Web Audio API is not supported in this browser');
+            }
+            
+            // 添加键盘事件
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // 添加按钮事件
+            recordBtn.addEventListener('click', toggleRecording);
+            playBtn.addEventListener('click', playRecording);
+            clearBtn.addEventListener('click', clearRecording);
+            songBtn.addEventListener('click', toggleSongSheet);
+            volumeSlider.addEventListener('input', updateVolume);
+        }
+
+        // 播放音符
+        function playNote(note) {
+            const keyElement = document.querySelector(`[data-note="${note.note}"]`);
+            if (keyElement) {
+                keyElement.classList.add('active');
+                
+                // 移除之前的振荡器（如果存在）
+                if (oscillators[note.note]) {
+                    oscillators[note.note].stop();
+                    delete oscillators[note.note];
+                }
+                
+                // 使用音频上下文创建振荡器
+                if (audioContext) {
+                    try {
+                        // 恢复音频上下文（如果被暂停）
+                        if (audioContext.state === 'suspended') {
+                            audioContext.resume();
+                        }
+                        
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        // 设置振荡器参数
+                        oscillator.type = 'sine';
+                        
+                        // 根据音符名称计算频率
+                        const frequency = getFrequencyFromNote(note.note);
+                        oscillator.frequency.value = frequency;
+                        
+                        // 设置音量
+                        gainNode.gain.value = volume;
+                        
+                        // 连接节点
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        // 开始播放
+                        oscillator.start();
+                        
+                        // 存储振荡器引用
+                        oscillators[note.note] = oscillator;
+                        
+                        // 设置音符衰减
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
+                        
+                        // 2秒后停止播放
+                        setTimeout(() => {
+                            if (oscillators[note.note]) {
+                                oscillators[note.note].stop();
+                                delete oscillators[note.note];
+                            }
+                        }, 2000);
+                    } catch (e) {
+                        console.error('Error playing note:', e);
+                        // 回退到使用音频文件
+                        playAudioFile(note.audioUrl);
+                    }
+                } else {
+                    // 如果音频上下文不可用，使用音频文件
+                    playAudioFile(note.audioUrl);
+                }
+                
+                // 记录音符（如果正在录音）
+                if (isRecording) {
+                    recordedSong.push({
+                        note: note.note,
+                        time: Date.now()
+                    });
+                    
+                    // 显示记录的音符
+                    showRecordedNote(note.note);
+                }
+                
+                // 移除活动类
+                setTimeout(() => {
+                    keyElement.classList.remove('active');
+                }, 300);
+            }
+        }
+
+        // 从音频文件播放音符
+        function playAudioFile(url) {
+            const audio = new Audio(url);
+            audio.volume = volume;
+            audio.play().catch(e => console.error('Error playing audio:', e));
+        }
+
+        // 根据音符名称计算频率
+        function getFrequencyFromNote(note) {
+            const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const octave = parseInt(note.slice(-1));
+            const noteName = note.slice(0, -1);
+            const noteIndex = notes.indexOf(noteName);
+            
+            // A4 = 440Hz
+            const a4Index = notes.indexOf('A') + 4 * 12;
+            const noteIndexFromA4 = noteIndex + octave * 12 - a4Index;
+            
+            // 计算频率: f = 440 * 2^(n/12)
+            return 440 * Math.pow(2, noteIndexFromA4 / 12);
+        }
+
+        // 处理键盘按下事件
+        function handleKeyDown(e) {
+            // 防止默认行为（如滚动）
+            if (['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k'].includes(e.key.toLowerCase())) {
+                e.preventDefault();
+            }
+            
+            // 查找对应的音符
+            const note = pianoNotes.find(n => n.key === e.key.toLowerCase());
+            if (note) {
+                const keyElement = document.querySelector(`[data-note="${note.note}"]`);
+                if (keyElement && !keyElement.classList.contains('active')) {
+                    playNote(note);
+                }
+            }
+        }
+
+        // 处理键盘释放事件
+        function handleKeyUp(e) {
+            const note = pianoNotes.find(n => n.key === e.key.toLowerCase());
+            if (note) {
+                const keyElement = document.querySelector(`[data-note="${note.note}"]`);
+                if (keyElement) {
+                    keyElement.classList.remove('active');
+                }
+            }
+        }
+
+        // 切换录音状态
+        function toggleRecording() {
+            isRecording = !isRecording;
+            recordBtn.classList.toggle('active', isRecording);
+            
+            if (isRecording) {
+                recordBtn.innerHTML = '<i class="fa fa-stop"></i>';
+                recordBtn.title = '停止录音';
+                recordedSong = [];
+                recordedNotes.innerHTML = '';
+            } else {
+                recordBtn.innerHTML = '<i class="fa fa-microphone"></i>';
+                recordBtn.title = '录音';
+            }
+        }
+
+        // 播放录音
+        function playRecording() {
+            if (recordedSong.length === 0 || isPlaying || isRecording) return;
+            
+            isPlaying = true;
+            playBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+            playBtn.disabled = true;
+            
+            let index = 0;
+            
+            function playNextNote() {
+                if (index >= recordedSong.length) {
+                    isPlaying = false;
+                    playBtn.innerHTML = '<i class="fa fa-play"></i>';
+                    playBtn.disabled = false;
+                    return;
+                }
+                
+                const recordedNote = recordedSong[index];
+                const note = pianoNotes.find(n => n.note === recordedNote.note);
+                
+                if (note) {
+                    playNote(note);
+                    
+                    // 计算下一个音符的延迟
+                    let delay = 300; // 默认延迟
+                    if (index < recordedSong.length - 1) {
+                        const nextTime = recordedSong[index + 1].time;
+                        delay = Math.min(Math.max(nextTime - recordedNote.time, 100), 1000);
+                    }
+                    
+                    index++;
+                    setTimeout(playNextNote, delay);
+                } else {
+                    index++;
+                    playNextNote();
+                }
+            }
+            
+            playNextNote();
+        }
+
+        // 清除录音
+        function clearRecording() {
+            recordedSong = [];
+            recordedNotes.innerHTML = '';
+        }
+
+        // 显示记录的音符
+        function showRecordedNote(note) {
+            const noteElement = document.createElement('div');
+            noteElement.classList.add('recorded-note');
+            noteElement.textContent = note;
+            
+            recordedNotes.appendChild(noteElement);
+            
+            // 限制显示的音符数量
+            if (recordedNotes.children.length > 10) {
+                recordedNotes.removeChild(recordedNotes.firstChild);
+            }
+            
+            // 滚动到最新的音符
+            recordedNotes.scrollLeft = recordedNotes.scrollWidth;
+        }
+
+        // 切换乐谱显示
+        function toggleSongSheet() {
+            songSheet.classList.toggle('active');
+            songBtn.classList.toggle('active', songSheet.classList.contains('active'));
+            
+            if (songSheet.classList.contains('active')) {
+                // 显示当前歌曲
+                const song = songs[currentSongIndex];
+                songTitle.textContent = song.title;
+                songLyrics.textContent = song.lyrics;
+                
+                // 点击歌曲标题切换歌曲
+                songTitle.addEventListener('click', function() {
+                    currentSongIndex = (currentSongIndex + 1) % songs.length;
+                    const nextSong = songs[currentSongIndex];
+                    songTitle.textContent = nextSong.title;
+                    songLyrics.textContent = nextSong.lyrics;
+                    
+                    // 添加切换动画
+                    gsap.from(songTitle, { opacity: 0, y: -10, duration: 0.3 });
+                    gsap.from(songLyrics, { opacity: 0, y: 10, duration: 0.3, delay: 0.1 });
+                });
+            }
+        }
+
+        // 更新音量
+        function updateVolume() {
+            volume = volumeSlider.value / 100;
+        }
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initPiano();
+            
+            // 添加页面加载动画
+            gsap.from('.header', { opacity: 0, y: -20, duration: 0.8 });
+            gsap.from('.piano-container', { opacity: 0, y: 20, duration: 0.8, delay: 0.2 });
+            gsap.from('.footer', { opacity: 0, y: 20, duration: 0.8, delay: 0.4 });
+            
+            // 为钢琴键添加动画
+            const keys = document.querySelectorAll('.key');
+            gsap.from(keys, {
+                opacity: 0,
+                y: 20,
+                duration: 0.5,
+                stagger: 0.03,
+                delay: 0.6
+            });
+        });
+    </script>
 </body>
 </html>
