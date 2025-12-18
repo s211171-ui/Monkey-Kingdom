@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>在线钢琴 - 随时随地弹奏美妙音乐</title>
+    <title>在线36键钢琴 - 随时随地弹奏美妙音乐</title>
     <!-- Tailwind CSS v3 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
@@ -45,14 +45,36 @@
                 overflow-x: auto;
                 overflow-y: hidden;
                 padding: 0 10px;
+                scrollbar-width: thin;
+                scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
+            }
+            
+            .piano-container::-webkit-scrollbar {
+                height: 6px;
+            }
+            
+            .piano-container::-webkit-scrollbar-track {
+                background: rgba(0, 0, 0, 0.1);
+                border-radius: 3px;
+            }
+            
+            .piano-container::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 3px;
+            }
+            
+            .piano-container::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.3);
             }
             
             .piano-keys {
                 position: relative;
                 height: 100%;
                 display: flex;
-                justify-content: center;
+                justify-content: flex-start;
                 align-items: flex-end;
+                min-width: max-content;
+                padding: 0 10px;
             }
             
             .key {
@@ -66,6 +88,7 @@
                 align-items: flex-end;
                 padding-bottom: 10px;
                 box-sizing: border-box;
+                flex-shrink: 0;
             }
             
             .key-white {
@@ -125,11 +148,14 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
             }
             
             .control-buttons {
                 display: flex;
                 gap: 10px;
+                flex-wrap: wrap;
             }
             
             .control-btn {
@@ -246,12 +272,14 @@
                 opacity: 0.7;
                 font-size: 12px;
                 color: white;
+                flex-wrap: wrap;
             }
             
             .keyboard-hint {
                 background-color: rgba(0, 0, 0, 0.5);
                 padding: 2px 5px;
                 border-radius: 3px;
+                margin: 2px;
             }
             
             .song-sheet {
@@ -322,6 +350,20 @@
                 opacity: 0.8;
             }
             
+            .octave-indicator {
+                position: absolute;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(0, 0, 0, 0.5);
+                color: white;
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-size: 12px;
+                z-index: 5;
+                opacity: 0.7;
+            }
+            
             @media (max-width: 768px) {
                 .piano-container {
                     height: 250px;
@@ -360,6 +402,10 @@
                 
                 .volume-slider {
                     width: 70px;
+                }
+                
+                .control-panel {
+                    justify-content: center;
                 }
             }
             
@@ -409,9 +455,9 @@
 </head>
 <body class="piano-bg">
     <div class="header">
-        <h1>在线钢琴</h1>
+        <h1>在线36键钢琴</h1>
         <p>随时随地弹奏美妙音乐</p>
-        <div class="mobile-hint">点击或触摸琴键来弹奏钢琴</div>
+        <div class="mobile-hint">点击或触摸琴键来弹奏钢琴 | 左右滑动查看更多琴键</div>
     </div>
     
     <div class="song-sheet" id="songSheet">
@@ -434,6 +480,9 @@
                 <button class="control-btn" id="songBtn" title="简易乐谱">
                     <i class="fa fa-music"></i>
                 </button>
+                <button class="control-btn" id="scrollToCenterBtn" title="滚动到中央C">
+                    <i class="fa fa-arrows-h"></i>
+                </button>
             </div>
             
             <div class="volume-control">
@@ -449,6 +498,8 @@
             <!-- 钢琴键将通过JavaScript动态生成 -->
         </div>
         
+        <div class="octave-indicator" id="octaveIndicator">八度: 3-5</div>
+        
         <div class="keyboard-hints">
             <div class="keyboard-hint">A</div>
             <div class="keyboard-hint">W</div>
@@ -463,16 +514,36 @@
             <div class="keyboard-hint">U</div>
             <div class="keyboard-hint">J</div>
             <div class="keyboard-hint">K</div>
+            <div class="keyboard-hint">O</div>
+            <div class="keyboard-hint">L</div>
+            <div class="keyboard-hint">P</div>
+            <div class="keyboard-hint">;</div>
+            <div class="keyboard-hint">'</div>
         </div>
     </div>
     
     <div class="footer">
-        <p>© 2025 在线钢琴 | 随时随地弹奏美妙音乐</p>
+        <p>© 2025 在线36键钢琴 | 随时随地弹奏美妙音乐</p>
     </div>
 
     <script>
-        // 定义钢琴音符和对应的音频文件
+        // 定义36键钢琴音符和对应的音频文件
         const pianoNotes = [
+            // 第3八度
+            { note: 'C3', type: 'white', key: 'z', audioUrl: 'https://assets.codepen.io/3340260/piano_C3.mp3' },
+            { note: 'C#3', type: 'black', key: 'x', audioUrl: 'https://assets.codepen.io/3340260/piano_C%233.mp3' },
+            { note: 'D3', type: 'white', key: 'c', audioUrl: 'https://assets.codepen.io/3340260/piano_D3.mp3' },
+            { note: 'D#3', type: 'black', key: 'v', audioUrl: 'https://assets.codepen.io/3340260/piano_D%233.mp3' },
+            { note: 'E3', type: 'white', key: 'b', audioUrl: 'https://assets.codepen.io/3340260/piano_E3.mp3' },
+            { note: 'F3', type: 'white', key: 'n', audioUrl: 'https://assets.codepen.io/3340260/piano_F3.mp3' },
+            { note: 'F#3', type: 'black', key: 'm', audioUrl: 'https://assets.codepen.io/3340260/piano_F%233.mp3' },
+            { note: 'G3', type: 'white', key: ',', audioUrl: 'https://assets.codepen.io/3340260/piano_G3.mp3' },
+            { note: 'G#3', type: 'black', key: '.', audioUrl: 'https://assets.codepen.io/3340260/piano_G%233.mp3' },
+            { note: 'A3', type: 'white', key: '/', audioUrl: 'https://assets.codepen.io/3340260/piano_A3.mp3' },
+            { note: 'A#3', type: 'black', key: '1', audioUrl: 'https://assets.codepen.io/3340260/piano_A%233.mp3' },
+            { note: 'B3', type: 'white', key: '2', audioUrl: 'https://assets.codepen.io/3340260/piano_B3.mp3' },
+            
+            // 第4八度（中央C所在八度）
             { note: 'C4', type: 'white', key: 'a', audioUrl: 'https://assets.codepen.io/3340260/piano_C4.mp3' },
             { note: 'C#4', type: 'black', key: 'w', audioUrl: 'https://assets.codepen.io/3340260/piano_C%234.mp3' },
             { note: 'D4', type: 'white', key: 's', audioUrl: 'https://assets.codepen.io/3340260/piano_D4.mp3' },
@@ -485,7 +556,23 @@
             { note: 'A4', type: 'white', key: 'h', audioUrl: 'https://assets.codepen.io/3340260/piano_A4.mp3' },
             { note: 'A#4', type: 'black', key: 'u', audioUrl: 'https://assets.codepen.io/3340260/piano_A%234.mp3' },
             { note: 'B4', type: 'white', key: 'j', audioUrl: 'https://assets.codepen.io/3340260/piano_B4.mp3' },
-            { note: 'C5', type: 'white', key: 'k', audioUrl: 'https://assets.codepen.io/3340260/piano_C5.mp3' }
+            
+            // 第5八度
+            { note: 'C5', type: 'white', key: 'k', audioUrl: 'https://assets.codepen.io/3340260/piano_C5.mp3' },
+            { note: 'C#5', type: 'black', key: 'o', audioUrl: 'https://assets.codepen.io/3340260/piano_C%235.mp3' },
+            { note: 'D5', type: 'white', key: 'l', audioUrl: 'https://assets.codepen.io/3340260/piano_D5.mp3' },
+            { note: 'D#5', type: 'black', key: 'p', audioUrl: 'https://assets.codepen.io/3340260/piano_D%235.mp3' },
+            { note: 'E5', type: 'white', key: ';', audioUrl: 'https://assets.codepen.io/3340260/piano_E5.mp3' },
+            { note: 'F5', type: 'white', key: '\'', audioUrl: 'https://assets.codepen.io/3340260/piano_F5.mp3' },
+            { note: 'F#5', type: 'black', key: '[', audioUrl: 'https://assets.codepen.io/3340260/piano_F%235.mp3' },
+            { note: 'G5', type: 'white', key: ']', audioUrl: 'https://assets.codepen.io/3340260/piano_G5.mp3' },
+            { note: 'G#5', type: 'black', key: '\\', audioUrl: 'https://assets.codepen.io/3340260/piano_G%235.mp3' },
+            { note: 'A5', type: 'white', key: '3', audioUrl: 'https://assets.codepen.io/3340260/piano_A5.mp3' },
+            { note: 'A#5', type: 'black', key: '4', audioUrl: 'https://assets.codepen.io/3340260/piano_A%235.mp3' },
+            { note: 'B5', type: 'white', key: '5', audioUrl: 'https://assets.codepen.io/3340260/piano_B5.mp3' },
+            
+            // 第6八度（额外添加几个高音）
+            { note: 'C6', type: 'white', key: '6', audioUrl: 'https://assets.codepen.io/3340260/piano_C6.mp3' }
         ];
 
         // 简易乐谱数据
@@ -517,6 +604,26 @@ E4 F4 G4 E4 F4 G4
 G4 A4 G4 F4 E4 C4
 G4 A4 G4 F4 E4 C4
 C4 G3 E4 C4 C4 G3 E4 C4`
+            },
+            {
+                title: "梦中的婚礼",
+                lyrics: `C4 B3 C4 E4 D4 C4 B3 A3
+G3 A3 C4 A3 G3 E3 G3
+C4 B3 C4 E4 D4 C4 B3 A3
+G3 A3 C4 A3 G3 E3 G3
+C4 B3 C4 E4 D4 C4 B3 A3
+G3 A3 C4 A3 G3 E3 G3`
+            },
+            {
+                title: "卡农",
+                lyrics: `C4 E4 G4 C5 E5 G4 E5 C5
+B4 D5 F5 B4 D5 F4 D5 B4
+A4 C5 E5 A4 C5 E4 C5 A4
+G3 B3 D4 G3 B3 D3 B3 G3
+C4 E4 G4 C5 E5 G4 E5 C5
+B4 D5 F5 B4 D5 F4 D5 B4
+A4 C5 E5 A4 C5 E4 C5 A4
+G3 B3 D4 G3 B3 D3 B3 G3`
             }
         ];
 
@@ -534,6 +641,9 @@ C4 G3 E4 C4 C4 G3 E4 C4`
         const songSheet = document.getElementById('songSheet');
         const songTitle = document.getElementById('songTitle');
         const songLyrics = document.getElementById('songLyrics');
+        const scrollToCenterBtn = document.getElementById('scrollToCenterBtn');
+        const octaveIndicator = document.getElementById('octaveIndicator');
+        const pianoContainer = document.querySelector('.piano-container');
 
         // 状态变量
         let isRecording = false;
@@ -542,6 +652,8 @@ C4 G3 E4 C4 C4 G3 E4 C4`
         let volume = 0.8;
         let audioContext = null;
         let oscillators = {};
+        let isDragging = false;
+        let startX, scrollLeft;
 
         // 初始化钢琴
         function initPiano() {
@@ -586,6 +698,18 @@ C4 G3 E4 C4 C4 G3 E4 C4`
             clearBtn.addEventListener('click', clearRecording);
             songBtn.addEventListener('click', toggleSongSheet);
             volumeSlider.addEventListener('input', updateVolume);
+            scrollToCenterBtn.addEventListener('click', scrollToCenterC);
+            
+            // 添加拖动滚动事件
+            pianoContainer.addEventListener('mousedown', startDrag);
+            pianoContainer.addEventListener('touchstart', startDragTouch);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('touchmove', dragTouch);
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDragTouch);
+            
+            // 初始滚动到中央C
+            setTimeout(scrollToCenterC, 500);
         }
 
         // 播放音符
@@ -694,23 +818,28 @@ C4 G3 E4 C4 C4 G3 E4 C4`
         // 处理键盘按下事件
         function handleKeyDown(e) {
             // 防止默认行为（如滚动）
-            if (['a', 'w', 's', 'e', 'd', 'f', 't', 'g', 'y', 'h', 'u', 'j', 'k'].includes(e.key.toLowerCase())) {
+            const key = e.key.toLowerCase();
+            if (pianoNotes.some(n => n.key === key)) {
                 e.preventDefault();
             }
             
             // 查找对应的音符
-            const note = pianoNotes.find(n => n.key === e.key.toLowerCase());
+            const note = pianoNotes.find(n => n.key === key);
             if (note) {
                 const keyElement = document.querySelector(`[data-note="${note.note}"]`);
                 if (keyElement && !keyElement.classList.contains('active')) {
                     playNote(note);
+                    
+                    // 滚动到可见区域
+                    scrollToKey(note.note);
                 }
             }
         }
 
         // 处理键盘释放事件
         function handleKeyUp(e) {
-            const note = pianoNotes.find(n => n.key === e.key.toLowerCase());
+            const key = e.key.toLowerCase();
+            const note = pianoNotes.find(n => n.key === key);
             if (note) {
                 const keyElement = document.querySelector(`[data-note="${note.note}"]`);
                 if (keyElement) {
@@ -759,6 +888,9 @@ C4 G3 E4 C4 C4 G3 E4 C4`
                 if (note) {
                     playNote(note);
                     
+                    // 滚动到可见区域
+                    scrollToKey(note.note);
+                    
                     // 计算下一个音符的延迟
                     let delay = 300; // 默认延迟
                     if (index < recordedSong.length - 1) {
@@ -792,7 +924,7 @@ C4 G3 E4 C4 C4 G3 E4 C4`
             recordedNotes.appendChild(noteElement);
             
             // 限制显示的音符数量
-            if (recordedNotes.children.length > 10) {
+            if (recordedNotes.children.length > 15) {
                 recordedNotes.removeChild(recordedNotes.firstChild);
             }
             
@@ -830,6 +962,87 @@ C4 G3 E4 C4 C4 G3 E4 C4`
             volume = volumeSlider.value / 100;
         }
 
+        // 滚动到中央C
+        function scrollToCenterC() {
+            const centerC = document.querySelector('[data-note="C4"]');
+            if (centerC) {
+                const containerWidth = pianoContainer.clientWidth;
+                const keyLeft = centerC.offsetLeft;
+                const keyWidth = centerC.offsetWidth;
+                
+                pianoContainer.scrollLeft = keyLeft - containerWidth / 2 + keyWidth / 2;
+            }
+        }
+
+        // 滚动到指定琴键
+        function scrollToKey(note) {
+            const keyElement = document.querySelector(`[data-note="${note}"]`);
+            if (keyElement) {
+                const containerWidth = pianoContainer.clientWidth;
+                const keyLeft = keyElement.offsetLeft;
+                const keyWidth = keyElement.offsetWidth;
+                
+                // 检查是否已经在可见区域内
+                const scrollLeft = pianoContainer.scrollLeft;
+                const scrollRight = scrollLeft + containerWidth;
+                
+                if (keyLeft < scrollLeft + containerWidth * 0.25 || keyLeft + keyWidth > scrollRight - containerWidth * 0.25) {
+                    // 平滑滚动到可见区域中央
+                    pianoContainer.scrollTo({
+                        left: keyLeft - containerWidth / 2 + keyWidth / 2,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+
+        // 开始拖动
+        function startDrag(e) {
+            isDragging = true;
+            startX = e.pageX - pianoContainer.offsetLeft;
+            scrollLeft = pianoContainer.scrollLeft;
+            pianoContainer.style.cursor = 'grabbing';
+        }
+
+        // 触摸开始拖动
+        function startDragTouch(e) {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                startX = e.touches[0].pageX - pianoContainer.offsetLeft;
+                scrollLeft = pianoContainer.scrollLeft;
+                e.preventDefault();
+            }
+        }
+
+        // 拖动
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            const x = e.pageX - pianoContainer.offsetLeft;
+            const walk = (x - startX) * 2; // 滚动速度
+            pianoContainer.scrollLeft = scrollLeft - walk;
+        }
+
+        // 触摸拖动
+        function dragTouch(e) {
+            if (!isDragging || e.touches.length !== 1) return;
+            const x = e.touches[0].pageX - pianoContainer.offsetLeft;
+            const walk = (x - startX) * 2; // 滚动速度
+            pianoContainer.scrollLeft = scrollLeft - walk;
+            e.preventDefault();
+        }
+
+        // 结束拖动
+        function endDrag() {
+            isDragging = false;
+            pianoContainer.style.cursor = 'grab';
+        }
+
+        // 触摸结束拖动
+        function endDragTouch() {
+            isDragging = false;
+        }
+
         // 初始化
         window.addEventListener('DOMContentLoaded', () => {
             initPiano();
@@ -845,7 +1058,7 @@ C4 G3 E4 C4 C4 G3 E4 C4`
                 opacity: 0,
                 y: 20,
                 duration: 0.5,
-                stagger: 0.03,
+                stagger: 0.01,
                 delay: 0.6
             });
         });
