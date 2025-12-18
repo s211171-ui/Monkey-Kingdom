@@ -3,1063 +3,780 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>在线36键钢琴 - 随时随地弹奏美妙音乐</title>
+    <title>现代贪吃蛇 | 经典游戏重制版</title>
     <!-- Tailwind CSS v3 -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <!-- GSAP 动画库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#3B82F6',
+                        primary: '#4F46E5',
                         secondary: '#10B981',
-                        dark: '#1E293B',
-                        light: '#F8FAFC',
-                        accent: '#8B5CF6'
+                        accent: '#F59E0B',
+                        dark: '#111827',
+                        light: '#F9FAFB',
+                        snake: '#10B981',
+                        food: '#EF4444',
+                        grid: '#374151'
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        game: ['"Press Start 2P"', 'system-ui', 'sans-serif'],
+                        sans: ['Inter', 'system-ui', 'sans-serif']
                     },
                     boxShadow: {
-                        'piano': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                        'key-white': 'inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 3px rgba(0, 0, 0, 0.2)',
-                        'key-black': 'inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 1px 3px rgba(0, 0, 0, 0.4)',
-                        'key-white-active': 'inset 0 1px 0 rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.2)',
-                        'key-black-active': 'inset 0 1px 0 rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.5)',
+                        'game': '0 0 30px rgba(79, 70, 229, 0.3), 0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        'btn': '0 4px 6px -1px rgba(79, 70, 229, 0.2), 0 2px 4px -1px rgba(79, 70, 229, 0.1)',
+                        'btn-hover': '0 10px 15px -3px rgba(79, 70, 229, 0.3), 0 4px 6px -2px rgba(79, 70, 229, 0.15)',
                     }
                 }
             }
         }
     </script>
+    
     <style type="text/tailwindcss">
         @layer utilities {
-            .piano-container {
+            .game-container {
                 position: relative;
-                width: 100%;
-                height: 300px;
+                max-width: 600px;
                 margin: 0 auto;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 0 10px;
-                scrollbar-width: thin;
-                scrollbar-color: rgba(255, 255, 255, 0.2) rgba(0, 0, 0, 0.1);
             }
             
-            .piano-container::-webkit-scrollbar {
-                height: 6px;
+            .snake-grid {
+                display: grid;
+                grid-template-columns: repeat(var(--grid-cols), 1fr);
+                grid-template-rows: repeat(var(--grid-rows), 1fr);
+                gap: 1px;
+                background-color: theme('colors.grid');
+                border-radius: 6px;
+                overflow: hidden;
+                touch-action: none;
             }
             
-            .piano-container::-webkit-scrollbar-track {
-                background: rgba(0, 0, 0, 0.1);
+            .grid-cell {
+                background-color: theme('colors.dark');
+                transition: background-color 0.1s ease;
+            }
+            
+            .snake-cell {
+                background-color: theme('colors.snake');
                 border-radius: 3px;
+                transform: scale(0.95);
+                box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+                transition: all 0.08s ease;
             }
             
-            .piano-container::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 3px;
-            }
-            
-            .piano-container::-webkit-scrollbar-thumb:hover {
-                background: rgba(255, 255, 255, 0.3);
-            }
-            
-            .piano-keys {
-                position: relative;
-                height: 100%;
-                display: flex;
-                justify-content: flex-start;
-                align-items: flex-end;
-                min-width: max-content;
-                padding: 0 10px;
-            }
-            
-            .key {
-                position: relative;
-                border-radius: 0 0 5px 5px;
-                cursor: pointer;
-                transition: all 0.1s ease;
-                user-select: none;
-                display: flex;
-                justify-content: center;
-                align-items: flex-end;
-                padding-bottom: 10px;
-                box-sizing: border-box;
-                flex-shrink: 0;
-            }
-            
-            .key-white {
-                width: 60px;
-                height: 240px;
-                background: linear-gradient(to bottom, #ffffff 0%, #f0f0f0 100%);
-                border: 1px solid #ccc;
-                z-index: 1;
-                color: #333;
-                font-weight: bold;
-            }
-            
-            .key-black {
-                width: 36px;
-                height: 150px;
-                background: linear-gradient(to bottom, #333333 0%, #111111 100%);
-                margin: 0 -18px;
-                z-index: 2;
-                color: #fff;
-            }
-            
-            .key-white.active {
-                background: linear-gradient(to bottom, #e0e0e0 0%, #d0d0d0 100%);
-                transform: translateY(2px);
-                box-shadow: var(--tw-shadow-key-white-active);
-            }
-            
-            .key-black.active {
-                background: linear-gradient(to bottom, #222222 0%, #000000 100%);
-                transform: translateY(2px);
-                box-shadow: var(--tw-shadow-key-black-active);
-            }
-            
-            .key-text {
-                opacity: 0.7;
-                font-size: 14px;
-            }
-            
-            .key-white .key-text {
-                opacity: 0.5;
-            }
-            
-            .key:hover .key-text {
-                opacity: 1;
-            }
-            
-            .key:active .key-text {
-                opacity: 1;
-            }
-            
-            .control-panel {
-                position: absolute;
-                top: 10px;
-                left: 10px;
-                right: 10px;
-                z-index: 10;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            
-            .control-buttons {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-            }
-            
-            .control-btn {
-                background-color: rgba(255, 255, 255, 0.2);
-                border: none;
+            .food-cell {
+                background-color: theme('colors.food');
                 border-radius: 50%;
-                width: 40px;
-                height: 40px;
+                transform: scale(0.8);
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.6);
+                animation: pulse 1.5s infinite alternate;
+            }
+            
+            .game-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(17, 24, 39, 0.9);
+                backdrop-filter: blur(4px);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                border-radius: 6px;
+                z-index: 10;
+            }
+            
+            .score-display {
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .score-number {
+                display: inline-block;
+                min-width: 40px;
+                text-align: center;
+            }
+            
+            .direction-pad {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+                width: 180px;
+                margin: 0 auto;
+            }
+            
+            .dir-btn {
+                aspect-ratio: 1/1;
+                border-radius: 8px;
+                background-color: rgba(79, 70, 229, 0.2);
+                color: theme('colors.light');
+                border: 2px solid theme('colors.primary');
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 cursor: pointer;
-                color: white;
                 transition: all 0.2s ease;
-                backdrop-filter: blur(5px);
+                font-size: 1.5rem;
             }
             
-            .control-btn:hover {
-                background-color: rgba(255, 255, 255, 0.3);
+            .dir-btn.active {
+                background-color: theme('colors.primary');
+                transform: scale(0.95);
+                box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
+            }
+            
+            .difficulty-btn {
+                transition: all 0.2s ease;
+            }
+            
+            .difficulty-btn.active {
+                background-color: theme('colors.primary');
+                color: white;
                 transform: scale(1.05);
             }
             
-            .control-btn.active {
-                background-color: rgba(59, 130, 246, 0.8);
+            @keyframes pulse {
+                0% { transform: scale(0.8); opacity: 0.8; }
+                100% { transform: scale(0.9); opacity: 1; }
             }
             
-            .volume-control {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                background-color: rgba(255, 255, 255, 0.2);
-                padding: 5px 10px;
-                border-radius: 20px;
-                backdrop-filter: blur(5px);
+            @keyframes slideIn {
+                0% { transform: translateY(30px); opacity: 0; }
+                100% { transform: translateY(0); opacity: 1; }
             }
             
-            .volume-slider {
-                width: 100px;
-                height: 4px;
-                -webkit-appearance: none;
-                appearance: none;
-                background: rgba(255, 255, 255, 0.5);
-                outline: none;
-                border-radius: 2px;
+            @keyframes flash {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
             }
             
-            .volume-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 12px;
-                height: 12px;
-                background: white;
-                border-radius: 50%;
-                cursor: pointer;
+            .animate-slide-in {
+                animation: slideIn 0.5s ease forwards;
             }
             
-            .volume-slider::-moz-range-thumb {
-                width: 12px;
-                height: 12px;
-                background: white;
-                border-radius: 50%;
-                cursor: pointer;
-                border: none;
+            .animate-flash {
+                animation: flash 0.5s ease infinite;
             }
             
-            .piano-bg {
-                background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-                min-height: 100vh;
+            .snake-head {
+                background-color: #059669;
+                transform: scale(1);
+                border-radius: 4px;
             }
             
-            .header {
-                padding: 20px;
-                text-align: center;
-                color: white;
-            }
-            
-            .header h1 {
-                font-size: 2.5rem;
-                font-weight: bold;
-                margin-bottom: 10px;
-            }
-            
-            .header p {
-                font-size: 1.1rem;
-                opacity: 0.8;
-            }
-            
-            .footer {
-                padding: 20px;
-                text-align: center;
-                color: white;
-                opacity: 0.7;
-                font-size: 0.9rem;
-            }
-            
-            .footer a {
-                color: #3B82F6;
-                text-decoration: none;
-            }
-            
-            .footer a:hover {
-                text-decoration: underline;
-            }
-            
-            .keyboard-hints {
-                position: absolute;
-                bottom: 10px;
-                left: 0;
-                right: 0;
-                display: flex;
-                justify-content: center;
-                gap: 5px;
-                z-index: 5;
-                opacity: 0.7;
-                font-size: 12px;
-                color: white;
-                flex-wrap: wrap;
-            }
-            
-            .keyboard-hint {
-                background-color: rgba(0, 0, 0, 0.5);
-                padding: 2px 5px;
-                border-radius: 3px;
-                margin: 2px;
-            }
-            
-            .song-sheet {
-                background-color: rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
-                padding: 20px;
-                margin: 20px auto;
-                max-width: 800px;
-                backdrop-filter: blur(5px);
-                color: white;
-                display: none;
-            }
-            
-            .song-sheet.active {
-                display: block;
-            }
-            
-            .song-title {
-                font-size: 1.5rem;
-                font-weight: bold;
-                margin-bottom: 15px;
-                text-align: center;
-            }
-            
-            .song-lyrics {
-                font-size: 1rem;
-                line-height: 1.6;
-                white-space: pre-line;
-                text-align: center;
-            }
-            
-            .recorded-notes {
-                position: absolute;
-                top: 60px;
-                left: 10px;
-                right: 10px;
-                height: 80px;
-                overflow: hidden;
-                z-index: 5;
-                display: flex;
-                align-items: center;
-                padding: 0 10px;
-            }
-            
-            .recorded-note {
-                background-color: rgba(59, 130, 246, 0.7);
-                color: white;
-                padding: 3px 8px;
-                border-radius: 10px;
-                margin-right: 5px;
-                font-size: 12px;
-                animation: fadeInOut 2s ease-in-out;
-            }
-            
-            @keyframes fadeInOut {
-                0% { opacity: 0; transform: translateY(-10px); }
-                10% { opacity: 1; transform: translateY(0); }
-                90% { opacity: 1; transform: translateY(0); }
-                100% { opacity: 0; transform: translateY(10px); }
-            }
-            
-            .mobile-hint {
-                display: none;
-                text-align: center;
-                color: white;
-                margin: 10px 0;
-                font-size: 0.9rem;
-                opacity: 0.8;
-            }
-            
-            .octave-indicator {
-                position: absolute;
-                top: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: rgba(0, 0, 0, 0.5);
-                color: white;
-                padding: 2px 8px;
-                border-radius: 10px;
-                font-size: 12px;
-                z-index: 5;
-                opacity: 0.7;
-            }
-            
-            @media (max-width: 768px) {
-                .piano-container {
-                    height: 250px;
+            @media (max-width: 640px) {
+                .snake-grid {
+                    --grid-cols: 15;
+                    --grid-rows: 15;
                 }
                 
-                .key-white {
-                    width: 50px;
-                    height: 200px;
-                }
-                
-                .key-black {
-                    width: 30px;
-                    height: 120px;
-                    margin: 0 -15px;
-                }
-                
-                .key-text {
-                    font-size: 12px;
-                }
-                
-                .header h1 {
-                    font-size: 2rem;
-                }
-                
-                .header p {
-                    font-size: 1rem;
-                }
-                
-                .keyboard-hints {
-                    display: none;
-                }
-                
-                .mobile-hint {
-                    display: block;
-                }
-                
-                .volume-slider {
-                    width: 70px;
-                }
-                
-                .control-panel {
-                    justify-content: center;
+                .game-container {
+                    padding: 0 10px;
                 }
             }
             
-            @media (max-width: 480px) {
-                .piano-container {
-                    height: 200px;
-                }
-                
-                .key-white {
-                    width: 40px;
-                    height: 160px;
-                }
-                
-                .key-black {
-                    width: 24px;
-                    height: 100px;
-                    margin: 0 -12px;
-                }
-                
-                .key-text {
-                    font-size: 10px;
-                }
-                
-                .header h1 {
-                    font-size: 1.5rem;
-                }
-                
-                .header p {
-                    font-size: 0.9rem;
-                }
-                
-                .control-btn {
-                    width: 35px;
-                    height: 35px;
-                }
-                
-                .volume-control {
-                    padding: 3px 8px;
-                }
-                
-                .volume-slider {
-                    width: 50px;
+            @media (min-width: 641px) {
+                .snake-grid {
+                    --grid-cols: 20;
+                    --grid-rows: 20;
                 }
             }
         }
     </style>
+    
+    <!-- 引入像素字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
-<body class="piano-bg">
-    <div class="header">
-        <h1>在线36键钢琴</h1>
-        <p>随时随地弹奏美妙音乐</p>
-        <div class="mobile-hint">点击或触摸琴键来弹奏钢琴 | 左右滑动查看更多琴键</div>
-    </div>
+<body class="bg-gradient-to-br from-dark to-gray-900 min-h-screen text-light font-sans">
+    <header class="py-6 px-4 text-center">
+        <h1 class="text-[clamp(1.8rem,4vw,2.5rem)] font-game text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary mb-2">
+            贪吃蛇大作战
+        </h1>
+        <p class="text-gray-400 max-w-md mx-auto">
+            控制蛇吃掉食物，不断成长！小心不要撞到自己或边界
+        </p>
+    </header>
     
-    <div class="song-sheet" id="songSheet">
-        <div class="song-title" id="songTitle"></div>
-        <div class="song-lyrics" id="songLyrics"></div>
-    </div>
-    
-    <div class="piano-container">
-        <div class="control-panel">
-            <div class="control-buttons">
-                <button class="control-btn" id="recordBtn" title="录音">
-                    <i class="fa fa-microphone"></i>
-                </button>
-                <button class="control-btn" id="playBtn" title="播放录音">
-                    <i class="fa fa-play"></i>
-                </button>
-                <button class="control-btn" id="clearBtn" title="清除录音">
-                    <i class="fa fa-trash"></i>
-                </button>
-                <button class="control-btn" id="songBtn" title="简易乐谱">
-                    <i class="fa fa-music"></i>
-                </button>
-                <button class="control-btn" id="scrollToCenterBtn" title="滚动到中央C">
-                    <i class="fa fa-arrows-h"></i>
-                </button>
+    <main class="container mx-auto px-4 pb-16">
+        <div class="game-container">
+            <!-- 游戏信息栏 -->
+            <div class="flex justify-between items-center mb-4 p-3 bg-gray-800/50 rounded-lg">
+                <div class="score-display">
+                    <span class="text-gray-400 mr-2">分数:</span>
+                    <span id="score" class="score-number font-bold text-accent">0</span>
+                </div>
+                
+                <div class="flex gap-2">
+                    <button id="startBtn" class="px-4 py-2 bg-primary text-white rounded-lg font-medium shadow-btn hover:shadow-btn-hover transition-all">
+                        <i class="fa fa-play mr-2"></i>开始游戏
+                    </button>
+                    <button id="pauseBtn" class="px-4 py-2 bg-gray-700 text-white rounded-lg font-medium shadow-btn hover:bg-gray-600 transition-all hidden">
+                        <i class="fa fa-pause mr-2"></i>暂停
+                    </button>
+                </div>
+                
+                <div class="score-display">
+                    <span class="text-gray-400 mr-2">最高分:</span>
+                    <span id="highScore" class="score-number font-bold text-secondary">0</span>
+                </div>
             </div>
             
-            <div class="volume-control">
-                <i class="fa fa-volume-down"></i>
-                <input type="range" min="0" max="100" value="80" class="volume-slider" id="volumeSlider">
-                <i class="fa fa-volume-up"></i>
+            <!-- 游戏网格 -->
+            <div id="gameGrid" class="snake-grid aspect-square w-full shadow-game"></div>
+            
+            <!-- 游戏开始界面 -->
+            <div id="startOverlay" class="game-overlay">
+                <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-game text-primary mb-6 animate-slide-in">贪吃蛇大作战</h2>
+                <div class="w-full max-w-xs mx-auto mb-8 animate-slide-in" style="animation-delay: 0.1s">
+                    <h3 class="text-lg font-medium mb-3 text-gray-300">选择难度</h3>
+                    <div class="flex gap-3">
+                        <button class="difficulty-btn active px-4 py-2 rounded-lg bg-gray-700" data-speed="150">
+                            简单
+                        </button>
+                        <button class="difficulty-btn px-4 py-2 rounded-lg bg-gray-700" data-speed="100">
+                            中等
+                        </button>
+                        <button class="difficulty-btn px-4 py-2 rounded-lg bg-gray-700" data-speed="70">
+                            困难
+                        </button>
+                    </div>
+                </div>
+                <button id="startGameBtn" class="px-6 py-3 bg-primary text-white rounded-lg font-medium shadow-btn hover:shadow-btn-hover transition-all text-lg animate-slide-in" style="animation-delay: 0.2s">
+                    <i class="fa fa-play mr-2"></i>开始游戏
+                </button>
+                <p class="mt-6 text-gray-400 animate-slide-in" style="animation-delay: 0.3s">
+                    电脑: 方向键控制 | 手机: 触摸方向键
+                </p>
+            </div>
+            
+            <!-- 游戏结束界面 -->
+            <div id="gameOverOverlay" class="game-overlay hidden">
+                <h2 class="text-[clamp(1.5rem,3vw,2rem)] font-game text-food mb-4 animate-slide-in">游戏结束!</h2>
+                <p class="text-xl mb-2 text-gray-300 animate-slide-in" style="animation-delay: 0.1s">
+                    最终得分: <span id="finalScore" class="text-accent font-bold">0</span>
+                </p>
+                <p class="text-xl mb-8 text-gray-300 animate-slide-in" style="animation-delay: 0.2s">
+                    最高分: <span id="finalHighScore" class="text-secondary font-bold">0</span>
+                </p>
+                <button id="restartBtn" class="px-6 py-3 bg-primary text-white rounded-lg font-medium shadow-btn hover:shadow-btn-hover transition-all text-lg animate-slide-in" style="animation-delay: 0.3s">
+                    <i class="fa fa-refresh mr-2"></i>再来一局
+                </button>
             </div>
         </div>
         
-        <div class="recorded-notes" id="recordedNotes"></div>
-        
-        <div class="piano-keys" id="pianoKeys">
-            <!-- 钢琴键将通过JavaScript动态生成 -->
+        <!-- 移动端方向键 -->
+        <div class="md:hidden mt-8">
+            <div class="direction-pad">
+                <div></div>
+                <button class="dir-btn" data-direction="up">
+                    <i class="fa fa-chevron-up"></i>
+                </button>
+                <div></div>
+                <button class="dir-btn" data-direction="left">
+                    <i class="fa fa-chevron-left"></i>
+                </button>
+                <div></div>
+                <button class="dir-btn" data-direction="right">
+                    <i class="fa fa-chevron-right"></i>
+                </button>
+                <div></div>
+                <button class="dir-btn" data-direction="down">
+                    <i class="fa fa-chevron-down"></i>
+                </button>
+                <div></div>
+            </div>
         </div>
-        
-        <div class="octave-indicator" id="octaveIndicator">八度: 3-5</div>
-        
-        <div class="keyboard-hints">
-            <div class="keyboard-hint">A</div>
-            <div class="keyboard-hint">W</div>
-            <div class="keyboard-hint">S</div>
-            <div class="keyboard-hint">E</div>
-            <div class="keyboard-hint">D</div>
-            <div class="keyboard-hint">F</div>
-            <div class="keyboard-hint">T</div>
-            <div class="keyboard-hint">G</div>
-            <div class="keyboard-hint">Y</div>
-            <div class="keyboard-hint">H</div>
-            <div class="keyboard-hint">U</div>
-            <div class="keyboard-hint">J</div>
-            <div class="keyboard-hint">K</div>
-            <div class="keyboard-hint">O</div>
-            <div class="keyboard-hint">L</div>
-            <div class="keyboard-hint">P</div>
-            <div class="keyboard-hint">;</div>
-            <div class="keyboard-hint">'</div>
-        </div>
-    </div>
+    </main>
     
-    <div class="footer">
-        <p>© 2025 在线36键钢琴 | 随时随地弹奏美妙音乐</p>
-    </div>
+    <footer class="py-6 text-center text-gray-500 text-sm">
+        <p>© 2025 贪吃蛇大作战 | 经典游戏重制版</p>
+    </footer>
 
     <script>
-        // 定义36键钢琴音符和对应的音频文件
-        const pianoNotes = [
-            // 第3八度
-            { note: 'C3', type: 'white', key: 'z', audioUrl: 'https://assets.codepen.io/3340260/piano_C3.mp3' },
-            { note: 'C#3', type: 'black', key: 'x', audioUrl: 'https://assets.codepen.io/3340260/piano_C%233.mp3' },
-            { note: 'D3', type: 'white', key: 'c', audioUrl: 'https://assets.codepen.io/3340260/piano_D3.mp3' },
-            { note: 'D#3', type: 'black', key: 'v', audioUrl: 'https://assets.codepen.io/3340260/piano_D%233.mp3' },
-            { note: 'E3', type: 'white', key: 'b', audioUrl: 'https://assets.codepen.io/3340260/piano_E3.mp3' },
-            { note: 'F3', type: 'white', key: 'n', audioUrl: 'https://assets.codepen.io/3340260/piano_F3.mp3' },
-            { note: 'F#3', type: 'black', key: 'm', audioUrl: 'https://assets.codepen.io/3340260/piano_F%233.mp3' },
-            { note: 'G3', type: 'white', key: ',', audioUrl: 'https://assets.codepen.io/3340260/piano_G3.mp3' },
-            { note: 'G#3', type: 'black', key: '.', audioUrl: 'https://assets.codepen.io/3340260/piano_G%233.mp3' },
-            { note: 'A3', type: 'white', key: '/', audioUrl: 'https://assets.codepen.io/3340260/piano_A3.mp3' },
-            { note: 'A#3', type: 'black', key: '1', audioUrl: 'https://assets.codepen.io/3340260/piano_A%233.mp3' },
-            { note: 'B3', type: 'white', key: '2', audioUrl: 'https://assets.codepen.io/3340260/piano_B3.mp3' },
-            
-            // 第4八度（中央C所在八度）
-            { note: 'C4', type: 'white', key: 'a', audioUrl: 'https://assets.codepen.io/3340260/piano_C4.mp3' },
-            { note: 'C#4', type: 'black', key: 'w', audioUrl: 'https://assets.codepen.io/3340260/piano_C%234.mp3' },
-            { note: 'D4', type: 'white', key: 's', audioUrl: 'https://assets.codepen.io/3340260/piano_D4.mp3' },
-            { note: 'D#4', type: 'black', key: 'e', audioUrl: 'https://assets.codepen.io/3340260/piano_D%234.mp3' },
-            { note: 'E4', type: 'white', key: 'd', audioUrl: 'https://assets.codepen.io/3340260/piano_E4.mp3' },
-            { note: 'F4', type: 'white', key: 'f', audioUrl: 'https://assets.codepen.io/3340260/piano_F4.mp3' },
-            { note: 'F#4', type: 'black', key: 't', audioUrl: 'https://assets.codepen.io/3340260/piano_F%234.mp3' },
-            { note: 'G4', type: 'white', key: 'g', audioUrl: 'https://assets.codepen.io/3340260/piano_G4.mp3' },
-            { note: 'G#4', type: 'black', key: 'y', audioUrl: 'https://assets.codepen.io/3340260/piano_G%234.mp3' },
-            { note: 'A4', type: 'white', key: 'h', audioUrl: 'https://assets.codepen.io/3340260/piano_A4.mp3' },
-            { note: 'A#4', type: 'black', key: 'u', audioUrl: 'https://assets.codepen.io/3340260/piano_A%234.mp3' },
-            { note: 'B4', type: 'white', key: 'j', audioUrl: 'https://assets.codepen.io/3340260/piano_B4.mp3' },
-            
-            // 第5八度
-            { note: 'C5', type: 'white', key: 'k', audioUrl: 'https://assets.codepen.io/3340260/piano_C5.mp3' },
-            { note: 'C#5', type: 'black', key: 'o', audioUrl: 'https://assets.codepen.io/3340260/piano_C%235.mp3' },
-            { note: 'D5', type: 'white', key: 'l', audioUrl: 'https://assets.codepen.io/3340260/piano_D5.mp3' },
-            { note: 'D#5', type: 'black', key: 'p', audioUrl: 'https://assets.codepen.io/3340260/piano_D%235.mp3' },
-            { note: 'E5', type: 'white', key: ';', audioUrl: 'https://assets.codepen.io/3340260/piano_E5.mp3' },
-            { note: 'F5', type: 'white', key: '\'', audioUrl: 'https://assets.codepen.io/3340260/piano_F5.mp3' },
-            { note: 'F#5', type: 'black', key: '[', audioUrl: 'https://assets.codepen.io/3340260/piano_F%235.mp3' },
-            { note: 'G5', type: 'white', key: ']', audioUrl: 'https://assets.codepen.io/3340260/piano_G5.mp3' },
-            { note: 'G#5', type: 'black', key: '\\', audioUrl: 'https://assets.codepen.io/3340260/piano_G%235.mp3' },
-            { note: 'A5', type: 'white', key: '3', audioUrl: 'https://assets.codepen.io/3340260/piano_A5.mp3' },
-            { note: 'A#5', type: 'black', key: '4', audioUrl: 'https://assets.codepen.io/3340260/piano_A%235.mp3' },
-            { note: 'B5', type: 'white', key: '5', audioUrl: 'https://assets.codepen.io/3340260/piano_B5.mp3' },
-            
-            // 第6八度（额外添加几个高音）
-            { note: 'C6', type: 'white', key: '6', audioUrl: 'https://assets.codepen.io/3340260/piano_C6.mp3' }
-        ];
-
-        // 简易乐谱数据
-        const songs = [
-            {
-                title: "小星星",
-                lyrics: `C4 C4 G4 G4 A4 A4 G4
-F4 F4 E4 E4 D4 D4 C4
-G4 G4 F4 F4 E4 E4 D4
-G4 G4 F4 F4 E4 E4 D4
-C4 C4 G4 G4 A4 A4 G4
-F4 F4 E4 E4 D4 D4 C4`
+        // 游戏配置
+        const config = {
+            gridSize: {
+                mobile: 15,
+                desktop: 20
             },
-            {
-                title: "欢乐颂",
-                lyrics: `E4 E4 F4 G4 G4 F4 E4 D4
-C4 C4 D4 E4 E4 D4 D4
-E4 E4 F4 G4 G4 F4 E4 D4
-C4 C4 D4 E4 D4 C4 C4
-D4 D4 E4 C4 D4 E4 F4 E4 C4
-D4 E4 F4 E4 D4 C4 D4
-E4 E4 F4 G4 G4 F4 E4 D4
-C4 C4 D4 E4 D4 C4 C4`
-            },
-            {
-                title: "两只老虎",
-                lyrics: `C4 D4 E4 C4 C4 D4 E4 C4
-E4 F4 G4 E4 F4 G4
-G4 A4 G4 F4 E4 C4
-G4 A4 G4 F4 E4 C4
-C4 G3 E4 C4 C4 G3 E4 C4`
-            },
-            {
-                title: "梦中的婚礼",
-                lyrics: `C4 B3 C4 E4 D4 C4 B3 A3
-G3 A3 C4 A3 G3 E3 G3
-C4 B3 C4 E4 D4 C4 B3 A3
-G3 A3 C4 A3 G3 E3 G3
-C4 B3 C4 E4 D4 C4 B3 A3
-G3 A3 C4 A3 G3 E3 G3`
-            },
-            {
-                title: "卡农",
-                lyrics: `C4 E4 G4 C5 E5 G4 E5 C5
-B4 D5 F5 B4 D5 F4 D5 B4
-A4 C5 E5 A4 C5 E4 C5 A4
-G3 B3 D4 G3 B3 D3 B3 G3
-C4 E4 G4 C5 E5 G4 E5 C5
-B4 D5 F5 B4 D5 F4 D5 B4
-A4 C5 E5 A4 C5 E4 C5 A4
-G3 B3 D4 G3 B3 D3 B3 G3`
+            initialSpeed: 150, // 毫秒/步
+            directions: {
+                up: { x: 0, y: -1 },
+                down: { x: 0, y: 1 },
+                left: { x: -1, y: 0 },
+                right: { x: 1, y: 0 }
             }
-        ];
-
-        // 当前选中的歌曲索引
-        let currentSongIndex = 0;
-
+        };
+        
+        // 游戏状态
+        let gameState = {
+            snake: [],
+            food: {},
+            direction: config.directions.right,
+            nextDirection: config.directions.right,
+            isRunning: false,
+            isPaused: false,
+            score: 0,
+            highScore: 0,
+            speed: config.initialSpeed,
+            gridSize: 0,
+            gameLoop: null
+        };
+        
         // DOM元素
-        const pianoKeys = document.getElementById('pianoKeys');
-        const recordBtn = document.getElementById('recordBtn');
-        const playBtn = document.getElementById('playBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const songBtn = document.getElementById('songBtn');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const recordedNotes = document.getElementById('recordedNotes');
-        const songSheet = document.getElementById('songSheet');
-        const songTitle = document.getElementById('songTitle');
-        const songLyrics = document.getElementById('songLyrics');
-        const scrollToCenterBtn = document.getElementById('scrollToCenterBtn');
-        const octaveIndicator = document.getElementById('octaveIndicator');
-        const pianoContainer = document.querySelector('.piano-container');
-
-        // 状态变量
-        let isRecording = false;
-        let recordedSong = [];
-        let isPlaying = false;
-        let volume = 0.8;
-        let audioContext = null;
-        let oscillators = {};
-        let isDragging = false;
-        let startX, scrollLeft;
-
-        // 初始化钢琴
-        function initPiano() {
-            // 创建钢琴键
-            pianoNotes.forEach((note, index) => {
-                const keyElement = document.createElement('div');
-                keyElement.classList.add('key');
-                keyElement.classList.add(`key-${note.type}`);
-                keyElement.dataset.note = note.note;
-                keyElement.dataset.key = note.key;
-                
-                const keyText = document.createElement('div');
-                keyText.classList.add('key-text');
-                keyText.textContent = note.note;
-                
-                keyElement.appendChild(keyText);
-                pianoKeys.appendChild(keyElement);
-                
-                // 添加点击事件
-                keyElement.addEventListener('mousedown', () => playNote(note));
-                keyElement.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    playNote(note);
+        const gameGrid = document.getElementById('gameGrid');
+        const startOverlay = document.getElementById('startOverlay');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const startGameBtn = document.getElementById('startGameBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
+        const finalScoreElement = document.getElementById('finalScore');
+        const finalHighScoreElement = document.getElementById('finalHighScore');
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+        const directionBtns = document.querySelectorAll('.dir-btn');
+        
+        // 初始化游戏
+        function initGame() {
+            // 检测设备类型，设置网格大小
+            const isMobile = window.innerWidth <= 640;
+            gameState.gridSize = isMobile ? config.gridSize.mobile : config.gridSize.desktop;
+            
+            // 设置CSS变量
+            gameGrid.style.setProperty('--grid-cols', gameState.gridSize);
+            gameGrid.style.setProperty('--grid-rows', gameState.gridSize);
+            
+            // 创建网格单元格
+            gameGrid.innerHTML = '';
+            for (let y = 0; y < gameState.gridSize; y++) {
+                for (let x = 0; x < gameState.gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('grid-cell');
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    gameGrid.appendChild(cell);
+                }
+            }
+            
+            // 加载最高分
+            loadHighScore();
+            
+            // 添加事件监听
+            setupEventListeners();
+        }
+        
+        // 设置事件监听
+        function setupEventListeners() {
+            // 桌面端方向键控制
+            document.addEventListener('keydown', handleKeyDown);
+            
+            // 移动端方向键控制
+            directionBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const direction = btn.dataset.direction;
+                    changeDirection(direction);
+                    
+                    // 添加点击动画
+                    btn.classList.add('active');
+                    setTimeout(() => btn.classList.remove('active'), 100);
                 });
             });
             
-            // 初始化音频上下文
-            try {
-                window.AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContext();
-            } catch (e) {
-                console.warn('Web Audio API is not supported in this browser');
+            // 难度选择
+            difficultyBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    difficultyBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    gameState.speed = parseInt(btn.dataset.speed);
+                });
+            });
+            
+            // 按钮事件
+            startBtn.addEventListener('click', startGame);
+            pauseBtn.addEventListener('click', togglePause);
+            startGameBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('click', restartGame);
+        }
+        
+        // 开始游戏
+        function startGame() {
+            // 重置游戏状态
+            resetGame();
+            
+            // 隐藏覆盖层，显示暂停按钮
+            startOverlay.classList.add('hidden');
+            gameOverOverlay.classList.add('hidden');
+            startBtn.classList.add('hidden');
+            pauseBtn.classList.remove('hidden');
+            
+            // 开始游戏循环
+            gameState.isRunning = true;
+            gameState.isPaused = false;
+            startGameLoop();
+            
+            // 动画效果
+            gsap.from('.snake-cell', {
+                scale: 0,
+                opacity: 0,
+                stagger: 0.02,
+                duration: 0.3,
+                ease: 'elastic.out'
+            });
+        }
+        
+        // 重置游戏
+        function resetGame() {
+            // 清除之前的游戏循环
+            if (gameState.gameLoop) {
+                clearInterval(gameState.gameLoop);
             }
             
-            // 添加键盘事件
-            document.addEventListener('keydown', handleKeyDown);
-            document.addEventListener('keyup', handleKeyUp);
+            // 重置分数
+            gameState.score = 0;
+            updateScoreDisplay();
             
-            // 添加按钮事件
-            recordBtn.addEventListener('click', toggleRecording);
-            playBtn.addEventListener('click', playRecording);
-            clearBtn.addEventListener('click', clearRecording);
-            songBtn.addEventListener('click', toggleSongSheet);
-            volumeSlider.addEventListener('input', updateVolume);
-            scrollToCenterBtn.addEventListener('click', scrollToCenterC);
+            // 初始化蛇的位置（居中）
+            const centerX = Math.floor(gameState.gridSize / 2);
+            const centerY = Math.floor(gameState.gridSize / 2);
             
-            // 添加拖动滚动事件
-            pianoContainer.addEventListener('mousedown', startDrag);
-            pianoContainer.addEventListener('touchstart', startDragTouch);
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('touchmove', dragTouch);
-            document.addEventListener('mouseup', endDrag);
-            document.addEventListener('touchend', endDragTouch);
+            gameState.snake = [
+                { x: centerX, y: centerY },
+                { x: centerX - 1, y: centerY },
+                { x: centerX - 2, y: centerY }
+            ];
             
-            // 初始滚动到中央C
-            setTimeout(scrollToCenterC, 500);
+            // 初始方向
+            gameState.direction = config.directions.right;
+            gameState.nextDirection = config.directions.right;
+            
+            // 生成食物
+            generateFood();
+            
+            // 更新游戏网格
+            updateGameGrid();
         }
-
-        // 播放音符
-        function playNote(note) {
-            const keyElement = document.querySelector(`[data-note="${note.note}"]`);
-            if (keyElement) {
-                keyElement.classList.add('active');
-                
-                // 移除之前的振荡器（如果存在）
-                if (oscillators[note.note]) {
-                    oscillators[note.note].stop();
-                    delete oscillators[note.note];
+        
+        // 开始游戏循环
+        function startGameLoop() {
+            gameState.gameLoop = setInterval(() => {
+                if (!gameState.isPaused) {
+                    moveSnake();
                 }
+            }, gameState.speed);
+        }
+        
+        // 移动蛇
+        function moveSnake() {
+            // 更新方向
+            gameState.direction = gameState.nextDirection;
+            
+            // 计算新的蛇头位置
+            const head = { ...gameState.snake[0] };
+            head.x += gameState.direction.x;
+            head.y += gameState.direction.y;
+            
+            // 检测碰撞
+            if (checkCollision(head)) {
+                endGame();
+                return;
+            }
+            
+            // 将新蛇头添加到蛇的前面
+            gameState.snake.unshift(head);
+            
+            // 检查是否吃到食物
+            if (head.x === gameState.food.x && head.y === gameState.food.y) {
+                // 吃到食物，加分并生成新食物
+                gameState.score += 10;
+                updateScoreDisplay();
+                generateFood();
                 
-                // 使用音频上下文创建振荡器
-                if (audioContext) {
-                    try {
-                        // 恢复音频上下文（如果被暂停）
-                        if (audioContext.state === 'suspended') {
-                            audioContext.resume();
-                        }
-                        
-                        const oscillator = audioContext.createOscillator();
-                        const gainNode = audioContext.createGain();
-                        
-                        // 设置振荡器参数
-                        oscillator.type = 'sine';
-                        
-                        // 根据音符名称计算频率
-                        const frequency = getFrequencyFromNote(note.note);
-                        oscillator.frequency.value = frequency;
-                        
-                        // 设置音量
-                        gainNode.gain.value = volume;
-                        
-                        // 连接节点
-                        oscillator.connect(gainNode);
-                        gainNode.connect(audioContext.destination);
-                        
-                        // 开始播放
-                        oscillator.start();
-                        
-                        // 存储振荡器引用
-                        oscillators[note.note] = oscillator;
-                        
-                        // 设置音符衰减
-                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
-                        
-                        // 2秒后停止播放
-                        setTimeout(() => {
-                            if (oscillators[note.note]) {
-                                oscillators[note.note].stop();
-                                delete oscillators[note.note];
-                            }
-                        }, 2000);
-                    } catch (e) {
-                        console.error('Error playing note:', e);
-                        // 回退到使用音频文件
-                        playAudioFile(note.audioUrl);
-                    }
-                } else {
-                    // 如果音频上下文不可用，使用音频文件
-                    playAudioFile(note.audioUrl);
-                }
-                
-                // 记录音符（如果正在录音）
-                if (isRecording) {
-                    recordedSong.push({
-                        note: note.note,
-                        time: Date.now()
+                // 播放吃食物动画
+                const foodCell = document.querySelector(`[data-x="${gameState.food.x}"][data-y="${gameState.food.y}"]`);
+                if (foodCell) {
+                    gsap.to(foodCell, {
+                        scale: 1.5,
+                        opacity: 0,
+                        duration: 0.2,
+                        ease: 'back.in'
                     });
-                    
-                    // 显示记录的音符
-                    showRecordedNote(note.note);
                 }
-                
-                // 移除活动类
-                setTimeout(() => {
-                    keyElement.classList.remove('active');
-                }, 300);
-            }
-        }
-
-        // 从音频文件播放音符
-        function playAudioFile(url) {
-            const audio = new Audio(url);
-            audio.volume = volume;
-            audio.play().catch(e => console.error('Error playing audio:', e));
-        }
-
-        // 根据音符名称计算频率
-        function getFrequencyFromNote(note) {
-            const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-            const octave = parseInt(note.slice(-1));
-            const noteName = note.slice(0, -1);
-            const noteIndex = notes.indexOf(noteName);
-            
-            // A4 = 440Hz
-            const a4Index = notes.indexOf('A') + 4 * 12;
-            const noteIndexFromA4 = noteIndex + octave * 12 - a4Index;
-            
-            // 计算频率: f = 440 * 2^(n/12)
-            return 440 * Math.pow(2, noteIndexFromA4 / 12);
-        }
-
-        // 处理键盘按下事件
-        function handleKeyDown(e) {
-            // 防止默认行为（如滚动）
-            const key = e.key.toLowerCase();
-            if (pianoNotes.some(n => n.key === key)) {
-                e.preventDefault();
-            }
-            
-            // 查找对应的音符
-            const note = pianoNotes.find(n => n.key === key);
-            if (note) {
-                const keyElement = document.querySelector(`[data-note="${note.note}"]`);
-                if (keyElement && !keyElement.classList.contains('active')) {
-                    playNote(note);
-                    
-                    // 滚动到可见区域
-                    scrollToKey(note.note);
-                }
-            }
-        }
-
-        // 处理键盘释放事件
-        function handleKeyUp(e) {
-            const key = e.key.toLowerCase();
-            const note = pianoNotes.find(n => n.key === key);
-            if (note) {
-                const keyElement = document.querySelector(`[data-note="${note.note}"]`);
-                if (keyElement) {
-                    keyElement.classList.remove('active');
-                }
-            }
-        }
-
-        // 切换录音状态
-        function toggleRecording() {
-            isRecording = !isRecording;
-            recordBtn.classList.toggle('active', isRecording);
-            
-            if (isRecording) {
-                recordBtn.innerHTML = '<i class="fa fa-stop"></i>';
-                recordBtn.title = '停止录音';
-                recordedSong = [];
-                recordedNotes.innerHTML = '';
             } else {
-                recordBtn.innerHTML = '<i class="fa fa-microphone"></i>';
-                recordBtn.title = '录音';
+                // 没吃到食物，移除蛇尾
+                gameState.snake.pop();
             }
+            
+            // 更新游戏网格
+            updateGameGrid();
         }
-
-        // 播放录音
-        function playRecording() {
-            if (recordedSong.length === 0 || isPlaying || isRecording) return;
+        
+        // 检测碰撞
+        function checkCollision(head) {
+            // 边界碰撞
+            if (
+                head.x < 0 || 
+                head.x >= gameState.gridSize || 
+                head.y < 0 || 
+                head.y >= gameState.gridSize
+            ) {
+                return true;
+            }
             
-            isPlaying = true;
-            playBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
-            playBtn.disabled = true;
-            
-            let index = 0;
-            
-            function playNextNote() {
-                if (index >= recordedSong.length) {
-                    isPlaying = false;
-                    playBtn.innerHTML = '<i class="fa fa-play"></i>';
-                    playBtn.disabled = false;
-                    return;
+            // 自身碰撞
+            for (let i = 0; i < gameState.snake.length; i++) {
+                if (head.x === gameState.snake[i].x && head.y === gameState.snake[i].y) {
+                    return true;
                 }
+            }
+            
+            return false;
+        }
+        
+        // 生成食物
+        function generateFood() {
+            let foodX, foodY;
+            let isOnSnake;
+            
+            // 确保食物不在蛇身上
+            do {
+                isOnSnake = false;
+                foodX = Math.floor(Math.random() * gameState.gridSize);
+                foodY = Math.floor(Math.random() * gameState.gridSize);
                 
-                const recordedNote = recordedSong[index];
-                const note = pianoNotes.find(n => n.note === recordedNote.note);
-                
-                if (note) {
-                    playNote(note);
-                    
-                    // 滚动到可见区域
-                    scrollToKey(note.note);
-                    
-                    // 计算下一个音符的延迟
-                    let delay = 300; // 默认延迟
-                    if (index < recordedSong.length - 1) {
-                        const nextTime = recordedSong[index + 1].time;
-                        delay = Math.min(Math.max(nextTime - recordedNote.time, 100), 1000);
+                // 检查食物是否在蛇身上
+                for (let i = 0; i < gameState.snake.length; i++) {
+                    if (gameState.snake[i].x === foodX && gameState.snake[i].y === foodY) {
+                        isOnSnake = true;
+                        break;
                     }
-                    
-                    index++;
-                    setTimeout(playNextNote, delay);
-                } else {
-                    index++;
-                    playNextNote();
                 }
-            }
+            } while (isOnSnake);
             
-            playNextNote();
+            gameState.food = { x: foodX, y: foodY };
         }
-
-        // 清除录音
-        function clearRecording() {
-            recordedSong = [];
-            recordedNotes.innerHTML = '';
-        }
-
-        // 显示记录的音符
-        function showRecordedNote(note) {
-            const noteElement = document.createElement('div');
-            noteElement.classList.add('recorded-note');
-            noteElement.textContent = note;
+        
+        // 更新游戏网格
+        function updateGameGrid() {
+            // 清除所有单元格状态
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('snake-cell', 'food-cell', 'snake-head');
+            });
             
-            recordedNotes.appendChild(noteElement);
+            // 更新蛇的位置
+            gameState.snake.forEach((segment, index) => {
+                const cell = document.querySelector(`[data-x="${segment.x}"][data-y="${segment.y}"]`);
+                if (cell) {
+                    cell.classList.add('snake-cell');
+                    // 标记蛇头
+                    if (index === 0) {
+                        cell.classList.add('snake-head');
+                    }
+                }
+            });
             
-            // 限制显示的音符数量
-            if (recordedNotes.children.length > 15) {
-                recordedNotes.removeChild(recordedNotes.firstChild);
-            }
-            
-            // 滚动到最新的音符
-            recordedNotes.scrollLeft = recordedNotes.scrollWidth;
-        }
-
-        // 切换乐谱显示
-        function toggleSongSheet() {
-            songSheet.classList.toggle('active');
-            songBtn.classList.toggle('active', songSheet.classList.contains('active'));
-            
-            if (songSheet.classList.contains('active')) {
-                // 显示当前歌曲
-                const song = songs[currentSongIndex];
-                songTitle.textContent = song.title;
-                songLyrics.textContent = song.lyrics;
+            // 更新食物位置
+            const foodCell = document.querySelector(`[data-x="${gameState.food.x}"][data-y="${gameState.food.y}"]`);
+            if (foodCell) {
+                foodCell.classList.add('food-cell');
                 
-                // 点击歌曲标题切换歌曲
-                songTitle.addEventListener('click', function() {
-                    currentSongIndex = (currentSongIndex + 1) % songs.length;
-                    const nextSong = songs[currentSongIndex];
-                    songTitle.textContent = nextSong.title;
-                    songLyrics.textContent = nextSong.lyrics;
-                    
-                    // 添加切换动画
-                    gsap.from(songTitle, { opacity: 0, y: -10, duration: 0.3 });
-                    gsap.from(songLyrics, { opacity: 0, y: 10, duration: 0.3, delay: 0.1 });
+                // 食物出现动画
+                gsap.from(foodCell, {
+                    scale: 0,
+                    opacity: 0,
+                    duration: 0.3,
+                    ease: 'elastic.out'
                 });
             }
         }
-
-        // 更新音量
-        function updateVolume() {
-            volume = volumeSlider.value / 100;
-        }
-
-        // 滚动到中央C
-        function scrollToCenterC() {
-            const centerC = document.querySelector('[data-note="C4"]');
-            if (centerC) {
-                const containerWidth = pianoContainer.clientWidth;
-                const keyLeft = centerC.offsetLeft;
-                const keyWidth = centerC.offsetWidth;
-                
-                pianoContainer.scrollLeft = keyLeft - containerWidth / 2 + keyWidth / 2;
-            }
-        }
-
-        // 滚动到指定琴键
-        function scrollToKey(note) {
-            const keyElement = document.querySelector(`[data-note="${note}"]`);
-            if (keyElement) {
-                const containerWidth = pianoContainer.clientWidth;
-                const keyLeft = keyElement.offsetLeft;
-                const keyWidth = keyElement.offsetWidth;
-                
-                // 检查是否已经在可见区域内
-                const scrollLeft = pianoContainer.scrollLeft;
-                const scrollRight = scrollLeft + containerWidth;
-                
-                if (keyLeft < scrollLeft + containerWidth * 0.25 || keyLeft + keyWidth > scrollRight - containerWidth * 0.25) {
-                    // 平滑滚动到可见区域中央
-                    pianoContainer.scrollTo({
-                        left: keyLeft - containerWidth / 2 + keyWidth / 2,
-                        behavior: 'smooth'
-                    });
-                }
-            }
-        }
-
-        // 开始拖动
-        function startDrag(e) {
-            isDragging = true;
-            startX = e.pageX - pianoContainer.offsetLeft;
-            scrollLeft = pianoContainer.scrollLeft;
-            pianoContainer.style.cursor = 'grabbing';
-        }
-
-        // 触摸开始拖动
-        function startDragTouch(e) {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                startX = e.touches[0].pageX - pianoContainer.offsetLeft;
-                scrollLeft = pianoContainer.scrollLeft;
-                e.preventDefault();
-            }
-        }
-
-        // 拖动
-        function drag(e) {
-            if (!isDragging) return;
-            e.preventDefault();
-            const x = e.pageX - pianoContainer.offsetLeft;
-            const walk = (x - startX) * 2; // 滚动速度
-            pianoContainer.scrollLeft = scrollLeft - walk;
-        }
-
-        // 触摸拖动
-        function dragTouch(e) {
-            if (!isDragging || e.touches.length !== 1) return;
-            const x = e.touches[0].pageX - pianoContainer.offsetLeft;
-            const walk = (x - startX) * 2; // 滚动速度
-            pianoContainer.scrollLeft = scrollLeft - walk;
-            e.preventDefault();
-        }
-
-        // 结束拖动
-        function endDrag() {
-            isDragging = false;
-            pianoContainer.style.cursor = 'grab';
-        }
-
-        // 触摸结束拖动
-        function endDragTouch() {
-            isDragging = false;
-        }
-
-        // 初始化
-        window.addEventListener('DOMContentLoaded', () => {
-            initPiano();
+        
+        // 处理键盘事件
+        function handleKeyDown(e) {
+            if (!gameState.isRunning) return;
             
-            // 添加页面加载动画
-            gsap.from('.header', { opacity: 0, y: -20, duration: 0.8 });
-            gsap.from('.piano-container', { opacity: 0, y: 20, duration: 0.8, delay: 0.2 });
-            gsap.from('.footer', { opacity: 0, y: 20, duration: 0.8, delay: 0.4 });
+            switch (e.key) {
+                case 'ArrowUp':
+                    if (gameState.direction !== config.directions.down) {
+                        gameState.nextDirection = config.directions.up;
+                    }
+                    break;
+                case 'ArrowDown':
+                    if (gameState.direction !== config.directions.up) {
+                        gameState.nextDirection = config.directions.down;
+                    }
+                    break;
+                case 'ArrowLeft':
+                    if (gameState.direction !== config.directions.right) {
+                        gameState.nextDirection = config.directions.left;
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (gameState.direction !== config.directions.left) {
+                        gameState.nextDirection = config.directions.right;
+                    }
+                    break;
+                case ' ': // 空格键暂停/继续
+                    togglePause();
+                    break;
+            }
+        }
+        
+        // 改变方向（移动端）
+        function changeDirection(direction) {
+            if (!gameState.isRunning || gameState.isPaused) return;
             
-            // 为钢琴键添加动画
-            const keys = document.querySelectorAll('.key');
-            gsap.from(keys, {
+            switch (direction) {
+                case 'up':
+                    if (gameState.direction !== config.directions.down) {
+                        gameState.nextDirection = config.directions.up;
+                    }
+                    break;
+                case 'down':
+                    if (gameState.direction !== config.directions.up) {
+                        gameState.nextDirection = config.directions.down;
+                    }
+                    break;
+                case 'left':
+                    if (gameState.direction !== config.directions.right) {
+                        gameState.nextDirection = config.directions.left;
+                    }
+                    break;
+                case 'right':
+                    if (gameState.direction !== config.directions.left) {
+                        gameState.nextDirection = config.directions.right;
+                    }
+                    break;
+            }
+        }
+        
+        // 暂停/继续游戏
+        function togglePause() {
+            gameState.isPaused = !gameState.isPaused;
+            
+            if (gameState.isPaused) {
+                pauseBtn.innerHTML = '<i class="fa fa-play mr-2"></i>继续';
+                pauseBtn.classList.remove('bg-gray-700');
+                pauseBtn.classList.add('bg-secondary');
+                
+                // 添加暂停效果
+                gameGrid.classList.add('opacity-70');
+            } else {
+                pauseBtn.innerHTML = '<i class="fa fa-pause mr-2"></i>暂停';
+                pauseBtn.classList.remove('bg-secondary');
+                pauseBtn.classList.add('bg-gray-700');
+                
+                // 移除暂停效果
+                gameGrid.classList.remove('opacity-70');
+            }
+        }
+        
+        // 结束游戏
+        function endGame() {
+            // 停止游戏循环
+            clearInterval(gameState.gameLoop);
+            gameState.isRunning = false;
+            
+            // 更新最高分
+            if (gameState.score > gameState.highScore) {
+                gameState.highScore = gameState.score;
+                saveHighScore();
+            }
+            
+            // 更新结束界面
+            finalScoreElement.textContent = gameState.score;
+            finalHighScoreElement.textContent = gameState.highScore;
+            
+            // 显示结束界面和开始按钮
+            gameOverOverlay.classList.remove('hidden');
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+            
+            // 游戏结束动画
+            gsap.to('.snake-cell', {
+                scale: 0,
+                opacity: 0,
+                stagger: 0.02,
+                duration: 0.2,
+                ease: 'back.in'
+            });
+            
+            // 闪烁效果
+            const headCell = document.querySelector(`[data-x="${gameState.snake[0].x}"][data-y="${gameState.snake[0].y}"]`);
+            if (headCell) {
+                headCell.classList.add('animate-flash');
+            }
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            startGame();
+        }
+        
+        // 更新分数显示
+        function updateScoreDisplay() {
+            scoreElement.textContent = gameState.score;
+            highScoreElement.textContent = gameState.highScore;
+            
+            // 添加分数变化动画
+            gsap.from(scoreElement, {
+                scale: 1.5,
+                duration: 0.2,
+                ease: 'elastic.out'
+            });
+        }
+        
+        // 加载最高分
+        function loadHighScore() {
+            const savedHighScore = localStorage.getItem('snakeHighScore');
+            gameState.highScore = savedHighScore ? parseInt(savedHighScore) : 0;
+            highScoreElement.textContent = gameState.highScore;
+        }
+        
+        // 保存最高分
+        function saveHighScore() {
+            localStorage.setItem('snakeHighScore', gameState.highScore);
+        }
+        
+        // 窗口大小变化时重新初始化游戏
+        window.addEventListener('resize', () => {
+            if (!gameState.isRunning) {
+                initGame();
+            }
+        });
+        
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', () => {
+            initGame();
+            
+            // 页面加载动画
+            gsap.from('header', {
+                opacity: 0,
+                y: -20,
+                duration: 0.8
+            });
+            
+            gsap.from('.game-container', {
                 opacity: 0,
                 y: 20,
-                duration: 0.5,
-                stagger: 0.01,
-                delay: 0.6
+                duration: 0.8,
+                delay: 0.2
+            });
+            
+            gsap.from('footer', {
+                opacity: 0,
+                y: 20,
+                duration: 0.8,
+                delay: 0.4
             });
         });
     </script>
