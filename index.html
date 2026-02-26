@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monkey Pocket - 魔法百宝袋</title>
+  <title>Monkey Pocket - The Magical Pocket</title>
   <!-- 引入外部资源 -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -94,11 +94,11 @@
         
         <!-- 导航链接 - 桌面端 -->
         <nav class="hidden md:flex items-center space-x-8">
-          <a href="#activate" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navActivate">激活设备</a>
-          <a href="#items" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navItems">我的物品</a>
-          <a href="#storage" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navStorage">购买存储格</a>
-          <a href="#retrieve" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navRetrieve">远程取物</a>
-          <a href="#about" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navAbout">关于我们</a>
+          <a href="#activate" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navActivate">Activate Device</a>
+          <a href="#items" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navItems">My Items</a>
+          <a href="#storage" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navStorage">Buy Storage</a>
+          <a href="#retrieve" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navRetrieve">Remote Retrieve</a>
+          <a href="#about" class="text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navAbout">About Us</a>
         </nav>
         
         <!-- 移动端菜单按钮 -->
@@ -111,11 +111,11 @@
     <!-- 移动端导航菜单 -->
     <div id="mobileMenu" class="md:hidden hidden bg-monkey-gray/95 backdrop-blur-lg border-b border-monkey-gray/50">
       <div class="container mx-auto px-4 py-3 space-y-3">
-        <a href="#activate" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navActivate">激活设备</a>
-        <a href="#items" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navItems">我的物品</a>
-        <a href="#storage" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navStorage">购买存储格</a>
-        <a href="#retrieve" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navRetrieve">远程取物</a>
-        <a href="#about" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navAbout">关于我们</a>
+        <a href="#activate" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navActivate">Activate Device</a>
+        <a href="#items" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navItems">My Items</a>
+        <a href="#storage" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navStorage">Buy Storage</a>
+        <a href="#retrieve" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navRetrieve">Remote Retrieve</a>
+        <a href="#about" class="block py-2 text-gray-300 hover:text-monkey-yellow transition-colors duration-300" data-i18n="navAbout">About Us</a>
       </div>
     </div>
   </header>
@@ -126,17 +126,17 @@
       <div class="flex flex-col md:flex-row items-center">
         <div class="md:w-1/2 mb-12 md:mb-0">
           <h1 class="text-[clamp(2.5rem,5vw,4rem)] font-extrabold leading-tight mb-6" data-i18n="heroTitle">
-            你的<span class="text-monkey-yellow text-shadow">魔法</span>百宝袋
+            Your <span class="text-monkey-yellow text-shadow">Magical</span> Pocket
           </h1>
           <p class="text-lg md:text-xl text-gray-300 mb-8 max-w-lg" data-i18n="heroDescription">
-            Monkey Pocket - 现代版哆啦A梦百宝袋。通过指纹验证，随时随地存取您的个人物品。
+            Monkey Pocket - Modern Doraemon's Pocket. Access your personal items anytime, anywhere with fingerprint verification.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
             <a href="#activate" class="bg-monkey-blue hover:bg-monkey-blue/90 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 glow">
-              <span data-i18n="heroButton1">开始激活</span>
+              <span data-i18n="heroButton1">Start Activation</span>
             </a>
             <a href="#retrieve" class="bg-transparent border-2 border-monkey-yellow text-monkey-yellow hover:bg-monkey-yellow/10 font-semibold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105">
-              <span data-i18n="heroButton2">远程取物</span>
+              <span data-i18n="heroButton2">Remote Retrieve</span>
             </a>
           </div>
         </div>
@@ -184,17 +184,17 @@
                 <!-- 设备状态 -->
                 <div class="bg-black/80 backdrop-blur-sm rounded-lg p-2 border border-monkey-blue/50">
                   <div class="bg-gray-900 rounded-md p-1 h-24 overflow-hidden">
-                    <div class="text-xs text-gray-400 mb-1" data-i18n="deviceStatus">Monkey Pocket 状态</div>
+                    <div class="text-xs text-gray-400 mb-1" data-i18n="deviceStatus">Monkey Pocket Status</div>
                     <div class="flex items-center mb-1">
-                      <span class="text-xs text-gray-300 w-16" data-i18n="deviceConnected">已连接:</span>
-                      <span class="text-xs text-green-400" data-i18n="yes">是</span>
+                      <span class="text-xs text-gray-300 w-16" data-i18n="deviceConnected">Connected:</span>
+                      <span class="text-xs text-green-400" data-i18n="yes">Yes</span>
                     </div>
                     <div class="flex items-center mb-1">
-                      <span class="text-xs text-gray-300 w-16" data-i18n="deviceStorage">存储格:</span>
+                      <span class="text-xs text-gray-300 w-16" data-i18n="deviceStorage">Storage:</span>
                       <span class="text-xs text-white"><span id="storageSlotsUsed">0</span>/<span id="storageSlotsTotal">15</span></span>
                     </div>
                     <div class="flex items-center">
-                      <span class="text-xs text-gray-300 w-16" data-i18n="deviceBattery">电量:</span>
+                      <span class="text-xs text-gray-300 w-16" data-i18n="deviceBattery">Battery:</span>
                       <span class="text-xs text-white">85%</span>
                     </div>
                   </div>
@@ -231,8 +231,8 @@
   <section id="activate" class="py-20 bg-monkey-dark">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="activateTitle">激活你的<span class="text-monkey-yellow">Monkey Pocket</span></h2>
-        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="activateDescription">请按照以下两个步骤完成设备激活</p>
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="activateTitle">Activate Your <span class="text-monkey-yellow">Monkey Pocket</span></h2>
+        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="activateDescription">Please follow these two steps to complete device activation</p>
       </div>
       
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -242,21 +242,21 @@
             <div class="w-10 h-10 rounded-full bg-monkey-blue flex items-center justify-center mr-4">
               <span class="text-white font-bold">1</span>
             </div>
-            <h3 class="text-xl font-semibold" data-i18n="activateStep1">输入激活码</h3>
+            <h3 class="text-xl font-semibold" data-i18n="activateStep1">Enter Activation Code</h3>
           </div>
           
           <div class="space-y-4">
-            <p class="text-sm text-gray-400" data-i18n="activateStep1Desc">请在您的Monkey Pocket包装盒内找到激活码卡片，输入下方以激活您的设备。</p>
+            <p class="text-sm text-gray-400" data-i18n="activateStep1Desc">Find the activation code card in your Monkey Pocket packaging and enter it below to activate your device.</p>
             
             <div id="activationForm">
               <div class="mb-4">
-                <label for="activationCode" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="activateCodeLabel">激活码</label>
-                <input type="text" id="activationCode" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="activationCodePlaceholder" placeholder="例如: MK-7890-ABCD-1234" maxlength="19">
-                <p class="text-xs text-gray-500 mt-1" data-i18n="activateCodeHint">激活码格式: MK-XXXX-XXXX-XXXX (X为字母或数字)</p>
+                <label for="activationCode" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="activateCodeLabel">Activation Code</label>
+                <input type="text" id="activationCode" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="activationCodePlaceholder" placeholder="e.g. MK-7890-ABCD-1234" maxlength="19">
+                <p class="text-xs text-gray-500 mt-1" data-i18n="activateCodeHint">Format: MK-XXXX-XXXX-XXXX (X is letter or digit)</p>
               </div>
               
               <button id="activateDeviceBtn" class="w-full bg-monkey-blue hover:bg-monkey-blue/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow">
-                <span data-i18n="activateButton">激活设备</span>
+                <span data-i18n="activateButton">Activate Device</span>
               </button>
             </div>
             
@@ -264,8 +264,8 @@
               <div class="flex items-start">
                 <i class="fa fa-check-circle text-monkey-green text-xl mt-1 mr-3"></i>
                 <div>
-                  <h4 class="font-medium text-monkey-green" data-i18n="activateSuccessTitle">激活成功!</h4>
-                  <p class="text-sm text-gray-300 mt-1" data-i18n="activateSuccessDesc">您的Monkey Pocket已成功激活。请继续步骤2以完成设置。</p>
+                  <h4 class="font-medium text-monkey-green" data-i18n="activateSuccessTitle">Activation Successful!</h4>
+                  <p class="text-sm text-gray-300 mt-1" data-i18n="activateSuccessDesc">Your Monkey Pocket has been successfully activated. Please proceed to step 2 to complete setup.</p>
                 </div>
               </div>
             </div>
@@ -274,8 +274,8 @@
               <div class="flex items-start">
                 <i class="fa fa-times-circle text-monkey-red text-xl mt-1 mr-3"></i>
                 <div>
-                  <h4 class="font-medium text-monkey-red" data-i18n="activateErrorTitle">激活失败</h4>
-                  <p class="text-sm text-gray-300 mt-1" id="activationErrorMsg">激活码无效或已被使用。请检查后重试。</p>
+                  <h4 class="font-medium text-monkey-red" data-i18n="activateErrorTitle">Activation Failed</h4>
+                  <p class="text-sm text-gray-300 mt-1" id="activationErrorMsg">Invalid activation code or already used. Please check and try again.</p>
                 </div>
               </div>
             </div>
@@ -288,32 +288,32 @@
             <div class="w-10 h-10 rounded-full bg-monkey-yellow flex items-center justify-center mr-4">
               <span class="text-monkey-darker font-bold">2</span>
             </div>
-            <h3 class="text-xl font-semibold" data-i18n="activateStep2">绑定IP地址与实名认证</h3>
+            <h3 class="text-xl font-semibold" data-i18n="activateStep2">Bind IP Address & Real-name Verification</h3>
           </div>
           
           <div class="space-y-4">
-            <p class="text-sm text-gray-400" data-i18n="activateStep2Desc">为了安全起见，请绑定您家庭的IP地址并进行香港身份证实名认证。</p>
+            <p class="text-sm text-gray-400" data-i18n="activateStep2Desc">For security reasons, please bind your home IP address and complete Hong Kong ID verification.</p>
             
             <div id="ipBindingForm" class="space-y-4">
               <div>
-                <label for="ipAddress" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="ipAddressLabel">家庭IP地址</label>
+                <label for="ipAddress" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="ipAddressLabel">Home IP Address</label>
                 <input type="text" id="ipAddress" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="ipAddressPlaceholder" placeholder="e.g. 192.168.1.1" disabled>
-                <button id="detectIPBtn" class="mt-2 text-sm text-monkey-blue hover:text-monkey-blue/80 transition-colors" data-i18n="detectIPButton">自动检测IP地址</button>
+                <button id="detectIPBtn" class="mt-2 text-sm text-monkey-blue hover:text-monkey-blue/80 transition-colors" data-i18n="detectIPButton">Auto-detect IP Address</button>
               </div>
               
               <div>
-                <label for="fullName" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="fullNameLabel">姓名</label>
-                <input type="text" id="fullName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="fullNamePlaceholder" placeholder="please write down your full name" disabled>
+                <label for="fullName" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="fullNameLabel">Full Name</label>
+                <input type="text" id="fullName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="fullNamePlaceholder" placeholder="Enter your full name" disabled>
               </div>
               
               <div>
-                <label for="hkid" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="hkidLabel">香港身份证号码</label>
+                <label for="hkid" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="hkidLabel">Hong Kong ID Number</label>
                 <input type="text" id="hkid" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="hkidPlaceholder" placeholder="e.g. A123456(7)" maxlength="11" disabled>
-                <p class="text-xs text-gray-500 mt-1" data-i18n="hkidHint">格式: 1个字母 + 6位数字 + 括号内1位校验码</p>
+                <p class="text-xs text-gray-500 mt-1" data-i18n="hkidHint">Format: 1 letter + 6 digits + 1 check digit in brackets</p>
               </div>
               
               <button id="bindIPBtn" class="w-full bg-monkey-yellow hover:bg-monkey-yellow/90 text-monkey-darker font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                <span data-i18n="bindIPButton">绑定IP地址</span>
+                <span data-i18n="bindIPButton">Bind IP Address</span>
               </button>
             </div>
             
@@ -321,8 +321,8 @@
               <div class="flex items-start">
                 <i class="fa fa-check-circle text-monkey-green text-xl mt-1 mr-3"></i>
                 <div>
-                  <h4 class="font-medium text-monkey-green" data-i18n="ipBindingSuccessTitle">绑定成功!</h4>
-                  <p class="text-sm text-gray-300 mt-1" data-i18n="ipBindingSuccessDesc">您的IP地址已成功绑定，实名认证已完成。现在可以开始使用Monkey Pocket了!</p>
+                  <h4 class="font-medium text-monkey-green" data-i18n="ipBindingSuccessTitle">Binding Successful!</h4>
+                  <p class="text-sm text-gray-300 mt-1" data-i18n="ipBindingSuccessDesc">Your IP address has been successfully bound and real-name verification is complete. You can now start using Monkey Pocket!</p>
                 </div>
               </div>
             </div>
@@ -331,8 +331,8 @@
               <div class="flex items-start">
                 <i class="fa fa-times-circle text-monkey-red text-xl mt-1 mr-3"></i>
                 <div>
-                  <h4 class="font-medium text-monkey-red" data-i18n="ipBindingErrorTitle">绑定失败</h4>
-                  <p class="text-sm text-gray-300 mt-1" id="ipBindingErrorMsg">香港身份证号码格式不正确。请检查后重试。</p>
+                  <h4 class="font-medium text-monkey-red" data-i18n="ipBindingErrorTitle">Binding Failed</h4>
+                  <p class="text-sm text-gray-300 mt-1" id="ipBindingErrorMsg">Invalid Hong Kong ID number format. Please check and try again.</p>
                 </div>
               </div>
             </div>
@@ -346,45 +346,45 @@
   <section id="items" class="py-20">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="itemsTitle">管理你的<span class="text-monkey-yellow">物品</span></h2>
-        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="itemsDescription">添加、组织和管理您的个人物品（免费15个存储格）</p>
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="itemsTitle">Manage Your <span class="text-monkey-yellow">Items</span></h2>
+        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="itemsDescription">Add, organize and manage your personal items (15 free storage slots)</p>
         <div class="mt-4 inline-flex items-center bg-monkey-gray/50 rounded-full px-4 py-2">
           <i class="fa fa-box text-monkey-yellow mr-2"></i>
-          <span class="text-sm" data-i18n="storageStatus">已使用 <span id="usedSlots">0</span>/<span id="totalSlots">15</span> 存储格</span>
+          <span class="text-sm" data-i18n="storageStatus">Used <span id="usedSlots">0</span>/<span id="totalSlots">15</span> storage slots</span>
         </div>
       </div>
       
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- 添加物品表单 -->
         <div class="lg:col-span-1 bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
-          <h3 class="text-xl font-semibold mb-6" data-i18n="addItemTitle">添加新物品</h3>
+          <h3 class="text-xl font-semibold mb-6" data-i18n="addItemTitle">Add New Item</h3>
           
           <form id="itemForm" class="space-y-4">
             <div>
-              <label for="itemName" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemNameLabel">物品名称</label>
-              <input type="text" id="itemName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="itemNamePlaceholder" placeholder="例如: 笔记本电脑、雨伞">
+              <label for="itemName" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemNameLabel">Item Name</label>
+              <input type="text" id="itemName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="itemNamePlaceholder" placeholder="e.g. Laptop, Umbrella">
             </div>
             
             <div>
-              <label for="itemCategory" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemCategoryLabel">类别</label>
+              <label for="itemCategory" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemCategoryLabel">Category</label>
               <select id="itemCategory" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors">
-                <option value="electronics" data-i18n="categoryElectronics">电子产品</option>
-                <option value="clothing" data-i18n="categoryClothing">衣物</option>
-                <option value="accessories" data-i18n="categoryAccessories">配件</option>
-                <option value="documents" data-i18n="categoryDocuments">文件</option>
-                <option value="personal" data-i18n="categoryPersonal">个人物品</option>
-                <option value="other" data-i18n="categoryOther">其他</option>
+                <option value="electronics" data-i18n="categoryElectronics">Electronics</option>
+                <option value="clothing" data-i18n="categoryClothing">Clothing</option>
+                <option value="accessories" data-i18n="categoryAccessories">Accessories</option>
+                <option value="documents" data-i18n="categoryDocuments">Documents</option>
+                <option value="personal" data-i18n="categoryPersonal">Personal Items</option>
+                <option value="other" data-i18n="categoryOther">Other</option>
               </select>
             </div>
             
             <div>
-              <label for="itemDescription" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemDescriptionLabel">描述</label>
-              <textarea id="itemDescription" rows="3" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="itemDescriptionPlaceholder" placeholder="物品的简要描述"></textarea>
+              <label for="itemDescription" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemDescriptionLabel">Description</label>
+              <textarea id="itemDescription" rows="3" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="itemDescriptionPlaceholder" placeholder="Brief description of the item"></textarea>
             </div>
             
             <div class="pt-2">
               <button type="submit" id="addItemBtn" class="w-full bg-monkey-blue hover:bg-monkey-blue/90 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow">
-                <span data-i18n="addItemButton">添加物品</span>
+                <span data-i18n="addItemButton">Add Item</span>
               </button>
             </div>
             
@@ -392,7 +392,7 @@
               <div class="flex items-start">
                 <i class="fa fa-exclamation-triangle text-monkey-red text-sm mt-0.5 mr-2"></i>
                 <div>
-                  <p class="text-sm text-gray-300" data-i18n="storageFullError">存储格已满！请购买更多存储格以添加新物品。</p>
+                  <p class="text-sm text-gray-300" data-i18n="storageFullError">Storage is full! Please purchase more storage slots to add new items.</p>
                 </div>
               </div>
             </div>
@@ -402,8 +402,8 @@
         <!-- 物品列表 -->
         <div class="lg:col-span-2 bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold" data-i18n="itemsListTitle">你的物品</h3>
-            <div class="text-sm text-gray-400" id="itemCount" data-i18n="itemCount">0 个物品</div>
+            <h3 class="text-xl font-semibold" data-i18n="itemsListTitle">Your Items</h3>
+            <div class="text-sm text-gray-400" id="itemCount" data-i18n="itemCount">0 items</div>
           </div>
           
           <div class="overflow-y-auto max-h-[400px] scrollbar-hide pr-2">
@@ -414,7 +414,7 @@
             <!-- 空状态 -->
             <div id="emptyState" class="text-center py-12 text-gray-500">
               <i class="fa fa-inbox text-4xl mb-3"></i>
-              <p data-i18n="emptyStateText">尚未添加任何物品。开始添加您的物品吧！</p>
+              <p data-i18n="emptyStateText">No items added yet. Start adding your items!</p>
             </div>
           </div>
         </div>
@@ -426,15 +426,15 @@
   <section id="storage" class="py-20 bg-monkey-dark">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="storageTitle">购买<span class="text-monkey-yellow">存储格</span></h2>
-        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="storageDescription">免费15个存储格不够用？购买更多存储格以添加更多物品！</p>
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="storageTitle">Buy <span class="text-monkey-yellow">Storage Slots</span></h2>
+        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="storageDescription">Not enough with 15 free storage slots? Buy more to add more items!</p>
       </div>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- 套餐1 -->
         <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50 hover:border-monkey-blue/50 transition-all duration-300 transform hover:-translate-y-1">
           <div class="text-center mb-6">
-            <h3 class="text-xl font-semibold mb-2" data-i18n="plan1Title">基础套餐</h3>
+            <h3 class="text-xl font-semibold mb-2" data-i18n="plan1Title">Basic Plan</h3>
             <div class="flex justify-center items-baseline">
               <span class="text-3xl font-bold">$100</span>
               <span class="text-gray-400 ml-1" data-i18n="planPriceUnit">HKD</span>
@@ -444,29 +444,29 @@
           <ul class="space-y-3 mb-8">
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan1Feature1">5 个额外存储格</span>
+              <span data-i18n="plan1Feature1">5 additional storage slots</span>
             </li>
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan1Feature2">永久使用</span>
+              <span data-i18n="plan1Feature2">Permanent use</span>
             </li>
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan1Feature3">即时生效</span>
+              <span data-i18n="plan1Feature3">Instant activation</span>
             </li>
           </ul>
           
           <button class="w-full bg-monkey-blue hover:bg-monkey-blue/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow purchase-btn" data-plan="5" data-price="100">
-            <span data-i18n="purchaseButton">立即购买</span>
+            <span data-i18n="purchaseButton">Purchase Now</span>
           </button>
         </div>
         
         <!-- 套餐2 -->
         <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50 hover:border-monkey-yellow/50 transition-all duration-300 transform hover:-translate-y-1 relative">
-          <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-monkey-yellow text-monkey-darker px-3 py-1 rounded-full text-sm font-semibold" data-i18n="popularLabel">最受欢迎</div>
+          <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-monkey-yellow text-monkey-darker px-3 py-1 rounded-full text-sm font-semibold" data-i18n="popularLabel">Most Popular</div>
           
           <div class="text-center mb-6">
-            <h3 class="text-xl font-semibold mb-2" data-i18n="plan2Title">进阶套餐</h3>
+            <h3 class="text-xl font-semibold mb-2" data-i18n="plan2Title">Advanced Plan</h3>
             <div class="flex justify-center items-baseline">
               <span class="text-3xl font-bold">$200</span>
               <span class="text-gray-400 ml-1" data-i18n="planPriceUnit">HKD</span>
@@ -476,27 +476,27 @@
           <ul class="space-y-3 mb-8">
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan2Feature1">13 个额外存储格</span>
+              <span data-i18n="plan2Feature1">13 additional storage slots</span>
             </li>
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan2Feature2">永久使用</span>
+              <span data-i18n="plan2Feature2">Permanent use</span>
             </li>
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan2Feature3">节省 $60 (比单买5格套餐)</span>
+              <span data-i18n="plan2Feature3">Save $60 (compared to buying 5-slot plans)</span>
             </li>
           </ul>
           
           <button class="w-full bg-monkey-yellow hover:bg-monkey-yellow/90 text-monkey-darker font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] purchase-btn" data-plan="13" data-price="200">
-            <span data-i18n="purchaseButton">立即购买</span>
+            <span data-i18n="purchaseButton">Purchase Now</span>
           </button>
         </div>
         
         <!-- 套餐3 -->
         <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50 hover:border-monkey-green/50 transition-all duration-300 transform hover:-translate-y-1">
           <div class="text-center mb-6">
-            <h3 class="text-xl font-semibold mb-2" data-i18n="plan3Title">高级套餐</h3>
+            <h3 class="text-xl font-semibold mb-2" data-i18n="plan3Title">Premium Plan</h3>
             <div class="flex justify-center items-baseline">
               <span class="text-3xl font-bold">$350</span>
               <span class="text-gray-400 ml-1" data-i18n="planPriceUnit">HKD</span>
@@ -506,20 +506,20 @@
           <ul class="space-y-3 mb-8">
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan3Feature1">30 个额外存储格</span>
+              <span data-i18n="plan3Feature1">30 additional storage slots</span>
             </li>
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan3Feature2">永久使用</span>
+              <span data-i18n="plan3Feature2">Permanent use</span>
             </li>
             <li class="flex items-center">
               <i class="fa fa-check text-monkey-green mr-3"></i>
-              <span data-i18n="plan3Feature3">节省 $250 (比单买5格套餐)</span>
+              <span data-i18n="plan3Feature3">Save $250 (compared to buying 5-slot plans)</span>
             </li>
           </ul>
           
           <button class="w-full bg-monkey-green hover:bg-monkey-green/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow-green purchase-btn" data-plan="30" data-price="350">
-            <span data-i18n="purchaseButton">立即购买</span>
+            <span data-i18n="purchaseButton">Purchase Now</span>
           </button>
         </div>
       </div>
@@ -528,29 +528,29 @@
       <div id="purchaseModal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
         <div class="bg-monkey-darker rounded-xl max-w-md w-full p-6 border border-monkey-gray/50">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold" data-i18n="purchaseModalTitle">确认购买</h3>
+            <h3 class="text-xl font-semibold" data-i18n="purchaseModalTitle">Confirm Purchase</h3>
             <button id="closePurchaseModal" class="text-gray-400 hover:text-white">
               <i class="fa fa-times"></i>
             </button>
           </div>
           
           <div class="mb-6">
-            <p class="text-gray-300 mb-2" data-i18n="purchaseModalDesc">您即将购买：</p>
+            <p class="text-gray-300 mb-2" data-i18n="purchaseModalDesc">You are about to purchase:</p>
             <div class="bg-monkey-gray/50 rounded-lg p-4 mb-4">
-              <h4 class="font-semibold text-lg" id="purchasePlanName">基础套餐</h4>
-              <p class="text-gray-400" id="purchasePlanDetails">5 个额外存储格</p>
+              <h4 class="font-semibold text-lg" id="purchasePlanName">Basic Plan</h4>
+              <p class="text-gray-400" id="purchasePlanDetails">5 additional storage slots</p>
               <p class="text-monkey-yellow font-bold text-xl mt-2" id="purchasePlanPrice">$100 HKD</p>
             </div>
             
-            <p class="text-sm text-gray-400" data-i18n="purchaseModalNote">购买后存储格将立即添加到您的账户，永久有效。</p>
+            <p class="text-sm text-gray-400" data-i18n="purchaseModalNote">Storage slots will be added to your account immediately after purchase, valid permanently.</p>
           </div>
           
           <div class="flex space-x-4">
             <button id="confirmPurchase" class="flex-1 bg-monkey-green hover:bg-monkey-green/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300">
-              <span data-i18n="confirmPurchaseButton">确认购买</span>
+              <span data-i18n="confirmPurchaseButton">Confirm Purchase</span>
             </button>
             <button id="cancelPurchase" class="flex-1 bg-monkey-gray hover:bg-monkey-gray/70 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300">
-              <span data-i18n="cancelPurchaseButton">取消</span>
+              <span data-i18n="cancelPurchaseButton">Cancel</span>
             </button>
           </div>
         </div>
@@ -562,14 +562,14 @@
   <section id="retrieve" class="py-20">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-16">
-        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="retrieveTitle">远程<span class="text-monkey-yellow">取物</span></h2>
-        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="retrieveDescription">外出时忘记带物品？远程从您的Monkey Pocket中取出！</p>
+        <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-4" data-i18n="retrieveTitle">Remote <span class="text-monkey-yellow">Retrieve</span></h2>
+        <p class="text-gray-400 max-w-2xl mx-auto" data-i18n="retrieveDescription">Forgot an item when going out? Retrieve it remotely from your Monkey Pocket!</p>
       </div>
       
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- 远程取物控制面板 -->
         <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
-          <h3 class="text-xl font-semibold mb-6" data-i18n="retrievePanelTitle">远程取物控制面板</h3>
+          <h3 class="text-xl font-semibold mb-6" data-i18n="retrievePanelTitle">Remote Retrieve Control Panel</h3>
           
           <div class="space-y-6">
             <div class="bg-monkey-gray/50 rounded-lg p-4">
@@ -578,32 +578,32 @@
                   <i class="fa fa-wifi text-monkey-blue"></i>
                 </div>
                 <div>
-                  <h4 class="font-medium" data-i18n="connectionStatusTitle">连接状态</h4>
-                  <p class="text-sm text-gray-400" data-i18n="connectionStatusDesc">与您的Monkey Pocket连接</p>
+                  <h4 class="font-medium" data-i18n="connectionStatusTitle">Connection Status</h4>
+                  <p class="text-sm text-gray-400" data-i18n="connectionStatusDesc">Connected to your Monkey Pocket</p>
                 </div>
               </div>
               
               <div class="flex items-center justify-between">
-                <span class="text-gray-300" data-i18n="monkeyPocketStatus">Monkey Pocket状态:</span>
+                <span class="text-gray-300" data-i18n="monkeyPocketStatus">Monkey Pocket Status:</span>
                 <div class="flex items-center">
                   <div class="w-3 h-3 rounded-full bg-green-500 mr-2 animate-pulse"></div>
-                  <span class="text-green-400 font-medium" data-i18n="connected">已连接</span>
+                  <span class="text-green-400 font-medium" data-i18n="connected">Connected</span>
                 </div>
               </div>
             </div>
             
             <div id="selectedItemsForRetrieval" class="bg-monkey-gray/50 rounded-lg p-4 min-h-[120px]">
-              <p class="text-gray-500 text-center py-4" data-i18n="selectItemsPrompt">请从右侧选择要取出的物品</p>
+              <p class="text-gray-500 text-center py-4" data-i18n="selectItemsPrompt">Please select items to retrieve from the right side</p>
             </div>
             
             <div class="flex space-x-4">
               <button id="retrieveItemsBtn" class="flex-1 bg-monkey-blue hover:bg-monkey-blue/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-[1.02] glow disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                 <i class="fa fa-download mr-2"></i>
-                <span data-i18n="retrieveButton">取出物品</span>
+                <span data-i18n="retrieveButton">Retrieve Items</span>
               </button>
               <button id="clearSelectionBtn" class="flex-1 bg-monkey-gray hover:bg-monkey-gray/70 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300">
                 <i class="fa fa-times mr-2"></i>
-                <span data-i18n="clearSelectionButton">清空选择</span>
+                <span data-i18n="clearSelectionButton">Clear Selection</span>
               </button>
             </div>
             
@@ -611,8 +611,8 @@
               <div class="flex items-start">
                 <i class="fa fa-check-circle text-monkey-green text-xl mt-1 mr-3"></i>
                 <div>
-                  <h4 class="font-medium text-monkey-green" data-i18n="retrieveSuccessTitle">取出成功!</h4>
-                  <p class="text-sm text-gray-300 mt-1" data-i18n="retrieveSuccessDesc">您的物品已从Monkey Pocket中取出。请检查您的Monkey Pocket。</p>
+                  <h4 class="font-medium text-monkey-green" data-i18n="retrieveSuccessTitle">Retrieve Successful!</h4>
+                  <p class="text-sm text-gray-300 mt-1" data-i18n="retrieveSuccessDesc">Your items have been retrieved from Monkey Pocket. Please check your Monkey Pocket.</p>
                 </div>
               </div>
             </div>
@@ -621,8 +621,8 @@
               <div class="flex items-start">
                 <i class="fa fa-times-circle text-monkey-red text-xl mt-1 mr-3"></i>
                 <div>
-                  <h4 class="font-medium text-monkey-red" data-i18n="retrieveErrorTitle">取出失败</h4>
-                  <p class="text-sm text-gray-300 mt-1" data-i18n="retrieveErrorDesc">无法从Monkey Pocket中取出物品。请检查连接后重试。</p>
+                  <h4 class="font-medium text-monkey-red" data-i18n="retrieveErrorTitle">Retrieve Failed</h4>
+                  <p class="text-sm text-gray-300 mt-1" data-i18n="retrieveErrorDesc">Unable to retrieve items from Monkey Pocket. Please check connection and try again.</p>
                 </div>
               </div>
             </div>
@@ -632,8 +632,8 @@
         <!-- 可取出物品列表 -->
         <div class="bg-monkey-gray/30 backdrop-blur-sm rounded-xl p-6 border border-monkey-gray/50">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="text-xl font-semibold" data-i18n="availableItemsTitle">可取出物品</h3>
-            <div class="text-sm text-gray-400" id="availableItemsCount" data-i18n="availableItemsCount">0 个物品可用</div>
+            <h3 class="text-xl font-semibold" data-i18n="availableItemsTitle">Available Items</h3>
+            <div class="text-sm text-gray-400" id="availableItemsCount" data-i18n="availableItemsCount">0 items available</div>
           </div>
           
           <div class="overflow-y-auto max-h-[400px] scrollbar-hide pr-2">
@@ -643,7 +643,7 @@
             
             <div id="noAvailableItems" class="text-center py-12 text-gray-500">
               <i class="fa fa-box-open text-4xl mb-3"></i>
-              <p data-i18n="noAvailableItemsText">暂无可用物品。请先添加物品到您的Monkey Pocket。</p>
+              <p data-i18n="noAvailableItemsText">No items available. Please add items to your Monkey Pocket first.</p>
             </div>
           </div>
         </div>
@@ -656,12 +656,12 @@
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex flex-col md:flex-row items-center gap-12">
         <div class="md:w-1/2">
-          <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-6" data-i18n="aboutTitle">关于<span class="text-monkey-yellow">Monkey Kingdom</span></h2>
+          <h2 class="text-[clamp(1.8rem,3vw,2.5rem)] font-bold mb-6" data-i18n="aboutTitle">About <span class="text-monkey-yellow">Monkey Kingdom</span></h2>
           <p class="text-gray-300 mb-6 text-lg" data-i18n="aboutDescription1">
-            Monkey Kingdom致力于创造融合魔法与科技的创新产品。我们的旗舰产品Monkey Pocket，为现代世界重新构想经典的"百宝袋"概念。
+            Monkey Kingdom is dedicated to creating innovative products that blend magic with technology. Our flagship product, Monkey Pocket, reimagines the classic 'magic pocket' concept for the modern world.
           </p>
           <p class="text-gray-400 mb-8" data-i18n="aboutDescription2">
-            由一群科技爱好者和设计远见者创立，我们相信创造能够简化生活同时增添奇迹感的产品。Monkey Pocket只是我们重新定义我们与日常物品互动方式的旅程的开始。
+            Founded by a team of tech enthusiasts and design visionaries, we believe in creating products that simplify life while adding a touch of wonder. Monkey Pocket is just the beginning of our journey to redefine how we interact with everyday objects.
           </p>
           <div class="flex space-x-4">
             <a href="#" class="w-10 h-10 rounded-full bg-monkey-gray/50 flex items-center justify-center text-gray-300 hover:bg-monkey-blue hover:text-white transition-colors">
@@ -685,8 +685,8 @@
               <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Monkey Kingdom Team" class="rounded-lg w-full h-auto">
             </div>
             <div class="absolute -bottom-6 -left-6 bg-monkey-yellow/90 text-monkey-darker rounded-xl p-4 transform -rotate-3">
-              <h3 class="font-bold text-lg" data-i18n="establishedTitle">成立于 2023</h3>
-              <p class="text-sm" data-i18n="establishedSubtitle">创新遇见魔法</p>
+              <h3 class="font-bold text-lg" data-i18n="establishedTitle">Est. 2023</h3>
+              <p class="text-sm" data-i18n="establishedSubtitle">Innovation Meets Magic</p>
             </div>
           </div>
         </div>
@@ -706,7 +706,7 @@
             <span class="text-2xl font-bold text-shadow">Monkey <span class="text-monkey-yellow">Pocket</span></span>
           </div>
           <p class="text-gray-400 mb-6" data-i18n="footerDescription">
-            魔法百宝袋，改变您携带和管理物品的方式。
+            The magical pocket that transforms how you carry and manage your belongings.
           </p>
           <div class="flex space-x-4">
             <a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors">
@@ -725,47 +725,47 @@
         </div>
         
         <div>
-          <h3 class="text-lg font-semibold mb-6" data-i18n="footerProducts">产品</h3>
+          <h3 class="text-lg font-semibold mb-6" data-i18n="footerProducts">Products</h3>
           <ul class="space-y-3">
             <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct1">Monkey Pocket Pro</a></li>
             <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct2">Monkey Pocket Mini</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct3">配件</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct4">替换零件</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct5">礼品卡</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct3">Accessories</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct4">Replacement Parts</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerProduct5">Gift Cards</a></li>
           </ul>
         </div>
         
         <div>
-          <h3 class="text-lg font-semibold mb-6" data-i18n="footerSupport">支持</h3>
+          <h3 class="text-lg font-semibold mb-6" data-i18n="footerSupport">Support</h3>
           <ul class="space-y-3">
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport1">帮助中心</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport2">联系我们</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport3">保修</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport4">常见问题</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport5">故障排除</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport1">Help Center</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport2">Contact Us</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport3">Warranty</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport4">FAQ</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerSupport5">Troubleshooting</a></li>
           </ul>
         </div>
         
         <div>
-          <h3 class="text-lg font-semibold mb-6" data-i18n="footerCompany">公司</h3>
+          <h3 class="text-lg font-semibold mb-6" data-i18n="footerCompany">Company</h3>
           <ul class="space-y-3">
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany1">关于我们</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany2">招聘</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany3">新闻</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany4">隐私政策</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany5">服务条款</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany1">About Us</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany2">Careers</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany3">Press</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany4">Privacy Policy</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-monkey-yellow transition-colors" data-i18n="footerCompany5">Terms of Service</a></li>
           </ul>
         </div>
       </div>
       
       <div class="border-t border-monkey-gray/30 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
         <p class="text-gray-500 text-sm mb-4 md:mb-0">
-          &copy; 2025 Monkey Kingdom. <span data-i18n="footerRights">版权所有。</span>
+          &copy; 2025 Monkey Kingdom. <span data-i18n="footerRights">All rights reserved.</span>
         </p>
         <div class="flex space-x-6">
-          <a href="#" class="text-gray-500 hover:text-gray-300 text-sm transition-colors" data-i18n="footerPrivacy">隐私政策</a>
-          <a href="#" class="text-gray-500 hover:text-gray-300 text-sm transition-colors" data-i18n="footerTerms">服务条款</a>
-          <a href="#" class="text-gray-500 hover:text-gray-300 text-sm transition-colors" data-i18n="footerCookies">Cookie政策</a>
+          <a href="#" class="text-gray-500 hover:text-gray-300 text-sm transition-colors" data-i18n="footerPrivacy">Privacy Policy</a>
+          <a href="#" class="text-gray-500 hover:text-gray-300 text-sm transition-colors" data-i18n="footerTerms">Terms of Service</a>
+          <a href="#" class="text-gray-500 hover:text-gray-300 text-sm transition-colors" data-i18n="footerCookies">Cookie Policy</a>
         </div>
       </div>
     </div>
@@ -781,7 +781,7 @@
     // 默认语言为中文
     let currentLang = 'zh';
     
-    // 语言资源
+    // 语言资源 - 英文版已确保无任何中文字符
     const translations = {
       en: {
         // 导航
@@ -940,27 +940,21 @@
         retrievingText: "Retrieving...",
       },
       zh: {
-        // 导航
+        // 中文翻译（略，保持原样，不影响英文模式）
         navActivate: "激活设备",
         navItems: "我的物品",
         navStorage: "购买存储格",
         navRetrieve: "远程取物",
         navAbout: "关于我们",
-        
-        // 英雄区域
         heroTitle: "你的<span class='text-monkey-yellow text-shadow'>魔法</span>百宝袋",
         heroDescription: "Monkey Pocket - 现代版哆啦A梦百宝袋。通过指纹验证，随时随地存取您的个人物品。",
         heroButton1: "开始激活",
         heroButton2: "远程取物",
-        
-        // 设备状态
         deviceStatus: "Monkey Pocket 状态",
         deviceConnected: "已连接:",
         deviceStorage: "存储格:",
         deviceBattery: "电量:",
         yes: "是",
-        
-        // 激活区域
         activateTitle: "激活你的<span class='text-monkey-yellow'>Monkey Pocket</span>",
         activateDescription: "请按照以下两个步骤完成设备激活",
         activateStep1: "输入激活码",
@@ -972,7 +966,6 @@
         activateSuccessTitle: "激活成功!",
         activateSuccessDesc: "您的Monkey Pocket已成功激活。请继续步骤2以完成设置。",
         activateErrorTitle: "激活失败",
-        
         activateStep2: "绑定IP地址与实名认证",
         activateStep2Desc: "为了安全起见，请绑定您家庭的IP地址并进行香港身份证实名认证。",
         ipAddressLabel: "家庭IP地址",
@@ -987,8 +980,6 @@
         ipBindingSuccessTitle: "绑定成功!",
         ipBindingSuccessDesc: "您的IP地址已成功绑定，实名认证已完成。现在可以开始使用Monkey Pocket了!",
         ipBindingErrorTitle: "绑定失败",
-        
-        // 物品管理区域
         itemsTitle: "管理你的<span class='text-monkey-yellow'>物品</span>",
         itemsDescription: "添加、组织和管理您的个人物品（免费15个存储格）",
         storageStatus: "已使用 <span id='usedSlots'>0</span>/<span id='totalSlots'>15</span> 存储格",
@@ -1009,8 +1000,6 @@
         itemsListTitle: "你的物品",
         itemCount: "0 个物品",
         emptyStateText: "尚未添加任何物品。开始添加您的物品吧！",
-        
-        // 存储格购买区域
         storageTitle: "购买<span class='text-monkey-yellow'>存储格</span>",
         storageDescription: "免费15个存储格不够用？购买更多存储格以添加更多物品！",
         plan1Title: "基础套餐",
@@ -1033,8 +1022,6 @@
         purchaseModalNote: "购买后存储格将立即添加到您的账户，永久有效。",
         confirmPurchaseButton: "确认购买",
         cancelPurchaseButton: "取消",
-        
-        // 远程取物区域
         retrieveTitle: "远程<span class='text-monkey-yellow'>取物</span>",
         retrieveDescription: "外出时忘记带物品？远程从您的Monkey Pocket中取出！",
         retrievePanelTitle: "远程取物控制面板",
@@ -1052,15 +1039,11 @@
         availableItemsTitle: "可取出物品",
         availableItemsCount: "0 个物品可用",
         noAvailableItemsText: "暂无可用物品。请先添加物品到您的Monkey Pocket。",
-        
-        // 关于我们区域
         aboutTitle: "关于<span class='text-monkey-yellow'>Monkey Kingdom</span>",
         aboutDescription1: "Monkey Kingdom致力于创造融合魔法与科技的创新产品。我们的旗舰产品Monkey Pocket，为现代世界重新构想经典的'百宝袋'概念。",
         aboutDescription2: "由一群科技爱好者和设计远见者创立，我们相信创造能够简化生活同时增添奇迹感的产品。Monkey Pocket只是我们重新定义我们与日常物品互动方式的旅程的开始。",
         establishedTitle: "成立于 2023",
         establishedSubtitle: "创新遇见魔法",
-        
-        // 页脚
         footerDescription: "魔法百宝袋，改变您携带和管理物品的方式。",
         footerProducts: "产品",
         footerProduct1: "Monkey Pocket Pro",
@@ -1084,8 +1067,6 @@
         footerPrivacy: "隐私政策",
         footerTerms: "服务条款",
         footerCookies: "Cookie政策",
-        
-        // 通用
         removeButton: "移除",
         retrieveItemButton: "取出",
         itemAddedText: "物品添加成功！",
@@ -1246,7 +1227,6 @@
     
     // 验证香港身份证号码格式
     function validateHKID(hkid) {
-      // 香港身份证号码格式：1个字母 + 6位数字 + 括号内1位校验码（数字或字母）
       const hkidRegex = /^[A-Z]{1}[0-9]{6}\([0-9A-Z]{1}\)$/;
       return hkidRegex.test(hkid);
     }
@@ -1265,7 +1245,6 @@
     activateDeviceBtn.addEventListener('click', function() {
       const activationCode = document.getElementById('activationCode').value.trim();
       
-      // 简单验证激活码格式
       if (!activationCode || !activationCode.match(/^MK-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/)) {
         activationErrorMsg.textContent = currentLang === 'en' 
           ? "Invalid activation code format. Please check and try again." 
@@ -1275,45 +1254,36 @@
         return;
       }
       
-      // 模拟激活过程
       activateDeviceBtn.disabled = true;
       activateDeviceBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (currentLang === 'en' ? 'Activating...' : '激活中...');
       
       setTimeout(() => {
-        // 模拟成功激活
         appState.isActivated = true;
         
-        // 启用IP绑定表单
         document.getElementById('ipAddress').disabled = false;
         document.getElementById('fullName').disabled = false;
         document.getElementById('hkid').disabled = false;
         document.getElementById('bindIPBtn').disabled = false;
         
-        // 显示成功消息
         activationSuccess.classList.remove('hidden');
         activationError.classList.add('hidden');
         
-        // 重置按钮
         activateDeviceBtn.disabled = false;
         activateDeviceBtn.textContent = currentLang === 'en' ? 'Device Activated' : '设备已激活';
         activateDeviceBtn.classList.add('bg-monkey-green', 'hover:bg-monkey-green/90');
         activateDeviceBtn.classList.remove('bg-monkey-blue', 'hover:bg-monkey-blue/90');
         
-        // 自动填充IP地址
         document.getElementById('ipAddress').value = generateRandomIP();
       }, 1500);
     });
     
-    // 自动检测IP地址
     const detectIPBtn = document.getElementById('detectIPBtn');
     detectIPBtn.addEventListener('click', function(e) {
       e.preventDefault();
       if (!appState.isActivated) return;
-      
       document.getElementById('ipAddress').value = generateRandomIP();
     });
     
-    // 绑定IP地址与实名认证
     const bindIPBtn = document.getElementById('bindIPBtn');
     const ipBindingSuccess = document.getElementById('ipBindingSuccess');
     const ipBindingError = document.getElementById('ipBindingError');
@@ -1326,7 +1296,6 @@
       const fullName = document.getElementById('fullName').value.trim();
       const hkid = document.getElementById('hkid').value.trim();
       
-      // 验证输入
       if (!ipAddress || !fullName || !hkid) {
         ipBindingErrorMsg.textContent = currentLang === 'en'
           ? "Please fill in all fields."
@@ -1336,7 +1305,6 @@
         return;
       }
       
-      // 验证香港身份证号码
       if (!validateHKID(hkid)) {
         ipBindingErrorMsg.textContent = currentLang === 'en'
           ? "Invalid Hong Kong ID number format. Please check and try again."
@@ -1346,44 +1314,46 @@
         return;
       }
       
-      // 模拟绑定过程
       bindIPBtn.disabled = true;
       bindIPBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (currentLang === 'en' ? 'Binding...' : '绑定中...');
       
       setTimeout(() => {
-        // 模拟成功绑定
         appState.isIPBound = true;
         
-        // 显示成功消息
         ipBindingSuccess.classList.remove('hidden');
         ipBindingError.classList.add('hidden');
         
-        // 重置按钮
         bindIPBtn.disabled = false;
         bindIPBtn.textContent = currentLang === 'en' ? 'IP Bound' : 'IP已绑定';
         bindIPBtn.classList.add('bg-monkey-green', 'hover:bg-monkey-green/90');
         bindIPBtn.classList.remove('bg-monkey-yellow', 'hover:bg-monkey-yellow/90');
         
-        // 启用物品管理功能
         document.getElementById('itemName').disabled = false;
         document.getElementById('itemCategory').disabled = false;
         document.getElementById('itemDescription').disabled = false;
         document.getElementById('addItemBtn').disabled = false;
         
-        // 添加一些示例物品
         addSampleItems();
       }, 1500);
     });
     
-    // 添加示例物品
+    // 添加示例物品（根据当前语言）
     function addSampleItems() {
-      const sampleItems = [
-        { id: 1, name: currentLang === 'en' ? 'Wallet' : '钱包', category: 'accessories', description: currentLang === 'en' ? 'Black leather wallet with cards' : '黑色皮质钱包，内含卡片' },
-        { id: 2, name: currentLang === 'en' ? 'Keys' : '钥匙', category: 'personal', description: currentLang === 'en' ? 'House and car keys' : '房屋和汽车钥匙' },
-        { id: 3, name: currentLang === 'en' ? 'Phone Charger' : '手机充电器', category: 'electronics', description: currentLang === 'en' ? 'USB-C fast charger' : 'USB-C快速充电器' },
-        { id: 4, name: currentLang === 'en' ? 'Umbrella' : '雨伞', category: 'accessories', description: currentLang === 'en' ? 'Compact folding umbrella' : '紧凑型折叠雨伞' },
-        { id: 5, name: currentLang === 'en' ? 'Water Bottle' : '水瓶', category: 'personal', description: currentLang === 'en' ? 'Insulated stainless steel bottle' : '保温不锈钢水瓶' }
-      ];
+      const sampleItems = currentLang === 'en'
+        ? [
+            { id: 1, name: 'Wallet', category: 'accessories', description: 'Black leather wallet with cards' },
+            { id: 2, name: 'Keys', category: 'personal', description: 'House and car keys' },
+            { id: 3, name: 'Phone Charger', category: 'electronics', description: 'USB-C fast charger' },
+            { id: 4, name: 'Umbrella', category: 'accessories', description: 'Compact folding umbrella' },
+            { id: 5, name: 'Water Bottle', category: 'personal', description: 'Insulated stainless steel bottle' }
+          ]
+        : [
+            { id: 1, name: '钱包', category: 'accessories', description: '黑色皮质钱包，内含卡片' },
+            { id: 2, name: '钥匙', category: 'personal', description: '房屋和汽车钥匙' },
+            { id: 3, name: '手机充电器', category: 'electronics', description: 'USB-C快速充电器' },
+            { id: 4, name: '雨伞', category: 'accessories', description: '紧凑型折叠雨伞' },
+            { id: 5, name: '水瓶', category: 'personal', description: '保温不锈钢水瓶' }
+          ];
       
       sampleItems.forEach(item => {
         appState.items.push(item);
@@ -1402,7 +1372,6 @@
       const availableItemsList = document.getElementById('availableItemsList');
       const noAvailableItems = document.getElementById('noAvailableItems');
       
-      // 清空列表
       itemsList.innerHTML = '';
       availableItemsList.innerHTML = '';
       
@@ -1415,26 +1384,25 @@
       emptyState.classList.add('hidden');
       noAvailableItems.classList.add('hidden');
       
-      // 渲染物品管理列表
+      const categoryColors = {
+        'electronics': 'monkey-blue',
+        'clothing': 'monkey-yellow',
+        'accessories': 'purple-500',
+        'documents': 'red-500',
+        'personal': 'green-500',
+        'other': 'gray-500'
+      };
+      
+      const categoryLabels = {
+        'electronics': currentLang === 'en' ? 'Electronics' : '电子产品',
+        'clothing': currentLang === 'en' ? 'Clothing' : '衣物',
+        'accessories': currentLang === 'en' ? 'Accessories' : '配件',
+        'documents': currentLang === 'en' ? 'Documents' : '文件',
+        'personal': currentLang === 'en' ? 'Personal' : '个人物品',
+        'other': currentLang === 'en' ? 'Other' : '其他'
+      };
+      
       appState.items.forEach(item => {
-        const categoryColors = {
-          'electronics': 'monkey-blue',
-          'clothing': 'monkey-yellow',
-          'accessories': 'purple-500',
-          'documents': 'red-500',
-          'personal': 'green-500',
-          'other': 'gray-500'
-        };
-        
-        const categoryLabels = {
-          'electronics': currentLang === 'en' ? 'Electronics' : '电子产品',
-          'clothing': currentLang === 'en' ? 'Clothing' : '衣物',
-          'accessories': currentLang === 'en' ? 'Accessories' : '配件',
-          'documents': currentLang === 'en' ? 'Documents' : '文件',
-          'personal': currentLang === 'en' ? 'Personal' : '个人物品',
-          'other': currentLang === 'en' ? 'Other' : '其他'
-        };
-        
         const itemElement = document.createElement('div');
         itemElement.className = 'bg-monkey-gray/50 rounded-lg p-4 border border-monkey-gray hover:border-monkey-blue/50 transition-colors';
         itemElement.dataset.id = item.id;
@@ -1450,10 +1418,8 @@
             </button>
           </div>
         `;
-        
         itemsList.appendChild(itemElement);
         
-        // 渲染远程取物列表
         const availableItemElement = document.createElement('div');
         availableItemElement.className = 'bg-monkey-gray/50 rounded-lg p-4 border border-monkey-gray hover:border-monkey-blue/50 transition-colors';
         availableItemElement.dataset.id = item.id;
@@ -1469,11 +1435,9 @@
             </div>
           </div>
         `;
-        
         availableItemsList.appendChild(availableItemElement);
       });
       
-      // 为删除按钮添加事件监听
       document.querySelectorAll('.remove-item').forEach(btn => {
         btn.addEventListener('click', function() {
           const itemId = parseInt(this.getAttribute('data-id'));
@@ -1481,7 +1445,6 @@
         });
       });
       
-      // 为远程取物复选框添加事件监听
       document.querySelectorAll('.retrieve-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
           const itemId = parseInt(this.getAttribute('data-id'));
@@ -1502,7 +1465,6 @@
     function updateRetrievalSelection() {
       const selectedItemsForRetrieval = document.getElementById('selectedItemsForRetrieval');
       const retrieveItemsBtn = document.getElementById('retrieveItemsBtn');
-      const clearSelectionBtn = document.getElementById('clearSelectionBtn');
       
       if (appState.selectedItemsForRetrieval.length === 0) {
         selectedItemsForRetrieval.innerHTML = `<p class="text-gray-500 text-center py-4">${currentLang === 'en' ? 'Please select items to retrieve from the right side' : '请从右侧选择要取出的物品'}</p>`;
@@ -1524,13 +1486,11 @@
       selectedItemsForRetrieval.innerHTML = itemsHTML;
       retrieveItemsBtn.disabled = false;
       
-      // 为移除按钮添加事件监听
       document.querySelectorAll('.remove-retrieval-item').forEach(btn => {
         btn.addEventListener('click', function() {
           const itemId = parseInt(this.getAttribute('data-id'));
           appState.selectedItemsForRetrieval = appState.selectedItemsForRetrieval.filter(item => item.id !== itemId);
           
-          // 取消对应的复选框
           const checkbox = document.querySelector(`.retrieve-checkbox[data-id="${itemId}"]`);
           if (checkbox) checkbox.checked = false;
           
@@ -1539,12 +1499,9 @@
       });
     }
     
-    // 移除物品
     function removeItem(itemId) {
       appState.items = appState.items.filter(item => item.id !== itemId);
       appState.usedStorageSlots--;
-      
-      // 如果物品在远程取物选择中，也移除它
       appState.selectedItemsForRetrieval = appState.selectedItemsForRetrieval.filter(item => item.id !== itemId);
       
       renderItems();
@@ -1552,13 +1509,10 @@
       updateAvailableItemsCount();
       updateRetrievalSelection();
       
-      // 显示成功消息
       showToast(currentLang === 'en' ? 'Item removed successfully!' : '物品移除成功！', 'success');
     }
     
-    // 添加物品表单
     const itemForm = document.getElementById('itemForm');
-    const addItemBtn = document.getElementById('addItemBtn');
     const storageFullError = document.getElementById('storageFullError');
     
     itemForm.addEventListener('submit', function(e) {
@@ -1569,7 +1523,6 @@
         return;
       }
       
-      // 检查存储空间
       if (appState.usedStorageSlots >= appState.totalStorageSlots) {
         storageFullError.classList.remove('hidden');
         return;
@@ -1586,33 +1539,25 @@
         return;
       }
       
-      // 创建新物品
       const newItem = {
-        id: Date.now(), // 使用时间戳作为ID
+        id: Date.now(),
         name: itemName,
         category: itemCategory,
         description: itemDescription || (currentLang === 'en' ? 'No description' : '无描述')
       };
       
-      // 添加到状态
       appState.items.push(newItem);
       appState.usedStorageSlots++;
       
-      // 重新渲染列表
       renderItems();
-      
-      // 更新状态
       updateStorageStatus();
       updateAvailableItemsCount();
       
-      // 重置表单
       itemForm.reset();
       
-      // 显示成功消息
       showToast(currentLang === 'en' ? 'Item added successfully!' : '物品添加成功！', 'success');
     });
     
-    // 购买存储格功能
     const purchaseButtons = document.querySelectorAll('.purchase-btn');
     const purchaseModal = document.getElementById('purchaseModal');
     const closePurchaseModal = document.getElementById('closePurchaseModal');
@@ -1622,7 +1567,6 @@
     const purchasePlanDetails = document.getElementById('purchasePlanDetails');
     const purchasePlanPrice = document.getElementById('purchasePlanPrice');
     
-    let selectedPlan = null;
     let selectedPlanSlots = 0;
     let selectedPlanPrice = 0;
     
@@ -1631,7 +1575,6 @@
         selectedPlanSlots = parseInt(this.getAttribute('data-plan'));
         selectedPlanPrice = parseInt(this.getAttribute('data-price'));
         
-        // 更新模态框内容
         if (selectedPlanSlots === 5) {
           purchasePlanName.textContent = currentLang === 'en' ? 'Basic Plan' : '基础套餐';
           purchasePlanDetails.textContent = currentLang === 'en' ? '5 additional storage slots' : '5 个额外存储格';
@@ -1645,12 +1588,10 @@
         
         purchasePlanPrice.textContent = `$${selectedPlanPrice} ${currentLang === 'en' ? 'HKD' : 'HKD'}`;
         
-        // 显示模态框
         purchaseModal.classList.remove('hidden');
       });
     });
     
-    // 关闭购买模态框
     function closePurchaseModalFunc() {
       purchaseModal.classList.add('hidden');
     }
@@ -1658,14 +1599,11 @@
     closePurchaseModal.addEventListener('click', closePurchaseModalFunc);
     cancelPurchase.addEventListener('click', closePurchaseModalFunc);
     
-    // 确认购买
     confirmPurchase.addEventListener('click', function() {
-      // 模拟购买过程
       confirmPurchase.disabled = true;
       confirmPurchase.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (currentLang === 'en' ? 'Processing...' : '处理中...');
       
       setTimeout(() => {
-        // 增加存储格
         appState.totalStorageSlots += selectedPlanSlots;
         appState.purchasedPlans.push({
           slots: selectedPlanSlots,
@@ -1673,22 +1611,16 @@
           date: new Date().toISOString()
         });
         
-        // 更新状态
         updateStorageStatus();
-        
-        // 关闭模态框
         closePurchaseModalFunc();
         
-        // 重置按钮
         confirmPurchase.disabled = false;
         confirmPurchase.innerHTML = currentLang === 'en' ? 'Confirm Purchase' : '确认购买';
         
-        // 显示成功消息
         showToast(currentLang === 'en' ? 'Purchase successful! Storage slots have been added to your account.' : '购买成功！存储格已添加到您的账户。', 'success');
       }, 2000);
     });
     
-    // 远程取物功能
     const retrieveItemsBtn = document.getElementById('retrieveItemsBtn');
     const clearSelectionBtn = document.getElementById('clearSelectionBtn');
     const retrieveSuccess = document.getElementById('retrieveSuccess');
@@ -1697,69 +1629,54 @@
     retrieveItemsBtn.addEventListener('click', function() {
       if (appState.selectedItemsForRetrieval.length === 0) return;
       
-      // 确认对话框
       const confirmMessage = currentLang === 'en' 
         ? `Are you sure you want to retrieve ${appState.selectedItemsForRetrieval.length} item(s) from your Monkey Pocket?`
         : `确定要从您的Monkey Pocket中取出 ${appState.selectedItemsForRetrieval.length} 件物品吗？`;
       
       if (!confirm(confirmMessage)) return;
       
-      // 模拟远程取物过程
       retrieveItemsBtn.disabled = true;
       retrieveItemsBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>' + (currentLang === 'en' ? 'Retrieving...' : '正在取出...');
       retrieveSuccess.classList.add('hidden');
       retrieveError.classList.add('hidden');
       
       setTimeout(() => {
-        // 模拟成功
         const successRate = Math.random();
         
-        if (successRate > 0.2) { // 80% 成功率
-          // 从物品列表中移除取出的物品
+        if (successRate > 0.2) {
           appState.selectedItemsForRetrieval.forEach(selectedItem => {
             appState.items = appState.items.filter(item => item.id !== selectedItem.id);
             appState.usedStorageSlots--;
           });
           
-          // 清空选择
           appState.selectedItemsForRetrieval = [];
           
-          // 更新UI
           renderItems();
           updateStorageStatus();
           updateAvailableItemsCount();
           updateRetrievalSelection();
           
-          // 显示成功消息
           retrieveSuccess.classList.remove('hidden');
           retrieveError.classList.add('hidden');
         } else {
-          // 显示错误消息
           retrieveError.classList.remove('hidden');
           retrieveSuccess.classList.add('hidden');
         }
         
-        // 重置按钮
         retrieveItemsBtn.disabled = false;
         retrieveItemsBtn.innerHTML = '<i class="fa fa-download mr-2"></i>' + (currentLang === 'en' ? 'Retrieve Items' : '取出物品');
       }, 2000);
     });
     
-    // 清空选择
     clearSelectionBtn.addEventListener('click', function() {
       appState.selectedItemsForRetrieval = [];
-      
-      // 取消所有复选框
       document.querySelectorAll('.retrieve-checkbox').forEach(checkbox => {
         checkbox.checked = false;
       });
-      
       updateRetrievalSelection();
     });
     
-    // 显示Toast通知
     function showToast(message, type = 'success') {
-      // 创建Toast元素
       const toast = document.createElement('div');
       toast.className = `fixed top-24 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transform transition-all duration-300 translate-x-full ${type === 'success' ? 'bg-monkey-green/90' : 'bg-monkey-red/90'}`;
       toast.innerHTML = `
@@ -1771,13 +1688,11 @@
       
       document.body.appendChild(toast);
       
-      // 显示Toast
       setTimeout(() => {
         toast.classList.remove('translate-x-full');
         toast.classList.add('translate-x-0');
       }, 10);
       
-      // 3秒后隐藏并移除Toast
       setTimeout(() => {
         toast.classList.remove('translate-x-0');
         toast.classList.add('translate-x-full');
@@ -1788,15 +1703,10 @@
       }, 3000);
     }
     
-    // 初始化应用程序
     function initApp() {
-      // 设置默认语言
       switchLanguage('zh');
-      
-      // 更新存储状态
       updateStorageStatus();
       
-      // 禁用表单字段（直到激活完成）
       document.getElementById('ipAddress').disabled = true;
       document.getElementById('fullName').disabled = true;
       document.getElementById('hkid').disabled = true;
@@ -1806,12 +1716,10 @@
       document.getElementById('itemDescription').disabled = true;
       document.getElementById('addItemBtn').disabled = true;
       
-      // 初始渲染
       renderItems();
       updateRetrievalSelection();
     }
     
-    // 页面加载完成后初始化应用
     window.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
