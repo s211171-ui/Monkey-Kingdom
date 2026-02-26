@@ -251,7 +251,7 @@
             <div id="activationForm">
               <div class="mb-4">
                 <label for="activationCode" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="activateCodeLabel">激活码</label>
-                <input type="text" id="activationCode" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="例如: MK-7890-ABCD-1234" maxlength="19">
+                <input type="text" id="activationCode" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="activationCodePlaceholder" placeholder="例如: MK-7890-ABCD-1234" maxlength="19">
                 <p class="text-xs text-gray-500 mt-1" data-i18n="activateCodeHint">激活码格式: MK-XXXX-XXXX-XXXX (X为字母或数字)</p>
               </div>
               
@@ -297,18 +297,18 @@
             <div id="ipBindingForm" class="space-y-4">
               <div>
                 <label for="ipAddress" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="ipAddressLabel">家庭IP地址</label>
-                <input type="text" id="ipAddress" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="e.g. 192.168.1.1" disabled>
+                <input type="text" id="ipAddress" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="ipAddressPlaceholder" placeholder="e.g. 192.168.1.1" disabled>
                 <button id="detectIPBtn" class="mt-2 text-sm text-monkey-blue hover:text-monkey-blue/80 transition-colors" data-i18n="detectIPButton">自动检测IP地址</button>
               </div>
               
               <div>
                 <label for="fullName" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="fullNameLabel">姓名</label>
-                <input type="text" id="fullName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="please write down your full name" disabled>
+                <input type="text" id="fullName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="fullNamePlaceholder" placeholder="please write down your full name" disabled>
               </div>
               
               <div>
                 <label for="hkid" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="hkidLabel">香港身份证号码</label>
-                <input type="text" id="hkid" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="e.g. A123456(7)" maxlength="11" disabled>
+                <input type="text" id="hkid" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-3 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="hkidPlaceholder" placeholder="e.g. A123456(7)" maxlength="11" disabled>
                 <p class="text-xs text-gray-500 mt-1" data-i18n="hkidHint">格式: 1个字母 + 6位数字 + 括号内1位校验码</p>
               </div>
               
@@ -362,7 +362,7 @@
           <form id="itemForm" class="space-y-4">
             <div>
               <label for="itemName" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemNameLabel">物品名称</label>
-              <input type="text" id="itemName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="例如: 笔记本电脑、雨伞" data-i18n-placeholder="itemNamePlaceholder">
+              <input type="text" id="itemName" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="itemNamePlaceholder" placeholder="例如: 笔记本电脑、雨伞">
             </div>
             
             <div>
@@ -379,7 +379,7 @@
             
             <div>
               <label for="itemDescription" class="block text-sm font-medium text-gray-300 mb-1" data-i18n="itemDescriptionLabel">描述</label>
-              <textarea id="itemDescription" rows="3" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" placeholder="物品的简要描述" data-i18n-placeholder="itemDescriptionPlaceholder"></textarea>
+              <textarea id="itemDescription" rows="3" class="w-full bg-monkey-gray/50 border border-monkey-gray rounded-lg px-4 py-2 text-white focus:outline-none focus:border-monkey-blue transition-colors" data-i18n-placeholder="itemDescriptionPlaceholder" placeholder="物品的简要描述"></textarea>
             </div>
             
             <div class="pt-2">
@@ -810,6 +810,7 @@
         activateStep1: "Enter Activation Code",
         activateStep1Desc: "Find the activation code card in your Monkey Pocket packaging and enter it below to activate your device.",
         activateCodeLabel: "Activation Code",
+        activationCodePlaceholder: "e.g. MK-7890-ABCD-1234",
         activateCodeHint: "Format: MK-XXXX-XXXX-XXXX (X is letter or digit)",
         activateButton: "Activate Device",
         activateSuccessTitle: "Activation Successful!",
@@ -819,9 +820,12 @@
         activateStep2: "Bind IP Address & Real-name Verification",
         activateStep2Desc: "For security reasons, please bind your home IP address and complete Hong Kong ID verification.",
         ipAddressLabel: "Home IP Address",
+        ipAddressPlaceholder: "e.g. 192.168.1.1",
         detectIPButton: "Auto-detect IP Address",
         fullNameLabel: "Full Name",
+        fullNamePlaceholder: "Enter your full name",
         hkidLabel: "Hong Kong ID Number",
+        hkidPlaceholder: "e.g. A123456(7)",
         hkidHint: "Format: 1 letter + 6 digits + 1 check digit in brackets",
         bindIPButton: "Bind IP Address",
         ipBindingSuccessTitle: "Binding Successful!",
@@ -962,6 +966,7 @@
         activateStep1: "输入激活码",
         activateStep1Desc: "请在您的Monkey Pocket包装盒内找到激活码卡片，输入下方以激活您的设备。",
         activateCodeLabel: "激活码",
+        activationCodePlaceholder: "例如: MK-7890-ABCD-1234",
         activateCodeHint: "激活码格式: MK-XXXX-XXXX-XXXX (X为字母或数字)",
         activateButton: "激活设备",
         activateSuccessTitle: "激活成功!",
@@ -971,9 +976,12 @@
         activateStep2: "绑定IP地址与实名认证",
         activateStep2Desc: "为了安全起见，请绑定您家庭的IP地址并进行香港身份证实名认证。",
         ipAddressLabel: "家庭IP地址",
+        ipAddressPlaceholder: "例如: 192.168.1.1",
         detectIPButton: "自动检测IP地址",
         fullNameLabel: "姓名",
+        fullNamePlaceholder: "请输入您的全名",
         hkidLabel: "香港身份证号码",
+        hkidPlaceholder: "例如: A123456(7)",
         hkidHint: "格式: 1个字母 + 6位数字 + 括号内1位校验码",
         bindIPButton: "绑定IP地址",
         ipBindingSuccessTitle: "绑定成功!",
@@ -1121,7 +1129,7 @@
         }
       });
       
-      // 更新带有data-i18n-placeholder属性的元素
+      // 更新所有带有data-i18n-placeholder属性的元素
       document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
         const key = element.getAttribute('data-i18n-placeholder');
         if (translations[lang][key]) {
@@ -1129,9 +1137,11 @@
         }
       });
       
-      // 更新动态内容
-      updateItemCountText();
+      // 更新动态内容（物品列表、远程取物选择等）
+      renderItems();
+      updateRetrievalSelection();
       updateAvailableItemsCount();
+      updateItemCountText();
       updateStorageStatus();
     }
     
